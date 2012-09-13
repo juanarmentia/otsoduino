@@ -44,6 +44,11 @@ unsigned int indexSpace = EEPROM_readint(0);  //Se guarda el índice del espacio
 
 char cUriGraph[18]; // to Store the name of each file "%year%month%day.txt"
 
+//Variables used for the TS file system
+const char* URI_NOTHING = "nothing"; //No uri found
+const char* SPACE_FILE = "spaces.txt"; //file containing the list of space URIs and their corresponding directory
+const String FILE_DOES_NOT_EXIST = "nofile"; //file containing the list of space URIs and their corresponding directory
+
 void setup()
 {
   Serial.begin(9600);
@@ -166,7 +171,7 @@ String readSpaceUri(File gFile){
     }
   }
   else{
-    rSpaceUri = "nothing"; 
+    rSpaceUri = URI_NOTHING; 
   }
   return rSpaceUri;
 }
@@ -181,50 +186,43 @@ String readSpaceFolder(File gFile){
   return rSpaceFolder;
 }
 
-String writeTriple(String space, String subject, String predicate, String object){
-  
-  File graphFile;
-  Serial.print("1. Dentro de writeTriple: ");
-  Serial.println(indexSpace);
-  String spaceUri = "";      //URI del espacio
-  String spaceFolder = "";   //Nombre de la carpeta correspondiente al espacio
-  
-  
+String checkSpaceUri(String space, File graphFile){
   //Se empiela a leer spaces.txt para ver si existe el espacio
-  graphFile = SD.open("spaces.txt"); //No utilizar nombres largos de fichero (formato 8.3)
-  spaceUri = readSpaceUri(graphFile);
+  String spaceUri = readSpaceUri(graphFile);
   //Serial.println("1.5. spaceUri: " + spaceUri);
   
   //Si la URI leída en el fichero no es la misma que hemos pasado a la función o el fichero no está vacío, se sigue leyendo.
-  while((spaceUri != space)&&(spaceUri != "nothing")){
+  while((spaceUri != space)&&(spaceUri != URI_NOTHING)){
     while (c != '\n'){
       c = graphFile.read();
     }
     spaceUri = readSpaceUri(graphFile);
-  }
+  }  
+  return spaceUri;
+}
+
+String processSpaceFolder(String space, String spaceUri, File graphFile){
+  String spaceFolder = "";
   
-  //Si ha salido del while anterior y el fichero no está vacío, es que el espacio que se ha pasado a la función existe en el fichero y leemos el nombre de su carpeta asociada.
-  if (spaceUri != "nothing"){
+  //If the file is not empty, the space exists and we retrieve the name of the folder
+  if (spaceUri != URI_NOTHING){
     //Leer la parte del nombre de la carpeta
     spaceFolder = readSpaceFolder(graphFile);
     Serial.println("2. spaceFolder:" + spaceFolder);
-  }
-  graphFile.close();
-  
-  Serial.print("3. spaceUri(Nothing): |");
-  Serial.print(spaceUri);
-  Serial.println("|");
-  //Si no se ha encontrado el espacio en el fichero, se introduce en el spaces.txt y se crea una carpeta
-  if (spaceUri == "nothing"){ 
+  } else { 
+    //If the space does not exists a new entry is added to space.txt and the folder is created
+    Serial.print("3. spaceUri(Nothing): |");
+    Serial.print(spaceUri);
+    Serial.println("|");
     Serial.println("4. spaceUri es 'nothing'");
-    spacesFile = SD.open("spaces.txt", FILE_WRITE);
+    spacesFile = SD.open(SPACE_FILE, FILE_WRITE);
     if (spacesFile) { 
       spacesFile.print(space);
       spacesFile.print("|SP");
       spacesFile.println(indexSpace); 
       spacesFile.close();
     }
-    //Se crea la carpeta
+    //We create the directory
     spaceFolder = "SP" + (String)indexSpace;
     Serial.println("5. spaceFolder: "+spaceFolder);
     Serial.println(indexSpace);
@@ -237,6 +235,22 @@ String writeTriple(String space, String subject, String predicate, String object
     indexSpace++;
     EEPROM_writeint(0, indexSpace);
   }
+  
+  return spaceFolder;
+}
+
+String writeTriple(String space, String subject, String predicate, String object){
+  
+  File graphFile;
+  Serial.print("1. Dentro de writeTriple: ");
+  Serial.println(indexSpace);
+  String spaceUri = "";      //URI del espacio
+  String spaceFolder = "";   //Nombre de la carpeta correspondiente al espacio
+  
+  graphFile = SD.open(SPACE_FILE); //No utilizar nombres largos de fichero (formato 8.3)
+  spaceUri = checkSpaceUri (space, graphFile);
+  spaceFolder = processSpaceFolder(space, spaceUri, graphFile);
+  graphFile.close();
   
   //Guardar en la SD en el directorio SD:\space_uri\uri.txt las tripletas "s;p;o"
   
