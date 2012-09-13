@@ -186,9 +186,8 @@ String readSpaceFolder(File gFile){
   return rSpaceFolder;
 }
 
-String checkSpaceUri(String space){
+String checkSpaceUri(String space, File graphFile){
   //Se empiela a leer spaces.txt para ver si existe el espacio
-  File graphFile = SD.open(SPACE_FILE); //No utilizar nombres largos de fichero (formato 8.3)
   String spaceUri = readSpaceUri(graphFile);
   //Serial.println("1.5. spaceUri: " + spaceUri);
   
@@ -198,31 +197,20 @@ String checkSpaceUri(String space){
       c = graphFile.read();
     }
     spaceUri = readSpaceUri(graphFile);
-  }
-  
-  graphFile.close();
-  
+  }  
   return spaceUri;
 }
 
-String writeTriple(String space, String subject, String predicate, String object){
+String processSpaceFolder(String space, String spaceUri, File graphFile){
+  String spaceFolder = "";
   
-  File graphFile;
-  Serial.print("1. Dentro de writeTriple: ");
-  Serial.println(indexSpace);
-  String spaceUri = "";      //URI del espacio
-  String spaceFolder = "";   //Nombre de la carpeta correspondiente al espacio
-  
-  
-  
-  
-  //Si ha salido del while anterior y el fichero no está vacío, es que el espacio que se ha pasado a la función existe en el fichero y leemos el nombre de su carpeta asociada.
+  //If the file is not empty, the space exists and we retrieve the name of the folder
   if (spaceUri != URI_NOTHING){
     //Leer la parte del nombre de la carpeta
     spaceFolder = readSpaceFolder(graphFile);
     Serial.println("2. spaceFolder:" + spaceFolder);
-    graphFile.close();
-  } else { //If the space does not exists a new entry is added to space.txt and the directory is created
+  } else { 
+    //If the space does not exists a new entry is added to space.txt and the folder is created
     Serial.print("3. spaceUri(Nothing): |");
     Serial.print(spaceUri);
     Serial.println("|");
@@ -248,10 +236,21 @@ String writeTriple(String space, String subject, String predicate, String object
     EEPROM_writeint(0, indexSpace);
   }
   
-  }
-  
-  
+  return spaceFolder;
+}
 
+String writeTriple(String space, String subject, String predicate, String object){
+  
+  File graphFile;
+  Serial.print("1. Dentro de writeTriple: ");
+  Serial.println(indexSpace);
+  String spaceUri = "";      //URI del espacio
+  String spaceFolder = "";   //Nombre de la carpeta correspondiente al espacio
+  
+  graphFile = SD.open(SPACE_FILE); //No utilizar nombres largos de fichero (formato 8.3)
+  spaceUri = checkSpaceUri (space, graphFile);
+  spaceFolder = processSpaceFolder(space, spaceUri, graphFile);
+  graphFile.close();
   
   //Guardar en la SD en el directorio SD:\space_uri\uri.txt las tripletas "s;p;o"
   
