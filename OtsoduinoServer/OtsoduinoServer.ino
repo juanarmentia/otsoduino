@@ -44,6 +44,11 @@ unsigned int indexSpace = EEPROM_readint(0);  //Se guarda el índice del espacio
 
 char cUriGraph[18]; // to Store the name of each file "%year%month%day.txt"
 
+//Variables used for the TS file system
+char URI_NOTHING [] = {'n','o','t','h','i','n','g'}; //No uri found
+char* SPACE_FILE = "spaces.txt"; //file containing the list of space URIs and their corresponding directory
+String FILE_DOES_NOT_EXIST = "nofile"; //file containing the list of space URIs and their corresponding directory
+
 void setup()
 {
   Serial.begin(9600);
@@ -166,7 +171,7 @@ String readSpaceUri(File gFile){
     }
   }
   else{
-    rSpaceUri = "nothing"; 
+    rSpaceUri = URI_NOTHING; 
   }
   return rSpaceUri;
 }
@@ -191,12 +196,12 @@ String writeTriple(String space, String subject, String predicate, String object
   
   
   //Se empiela a leer spaces.txt para ver si existe el espacio
-  graphFile = SD.open("spaces.txt"); //No utilizar nombres largos de fichero (formato 8.3)
+  graphFile = SD.open(SPACE_FILE.toCharArray()); //No utilizar nombres largos de fichero (formato 8.3)
   spaceUri = readSpaceUri(graphFile);
   //Serial.println("1.5. spaceUri: " + spaceUri);
   
   //Si la URI leída en el fichero no es la misma que hemos pasado a la función o el fichero no está vacío, se sigue leyendo.
-  while((spaceUri != space)&&(spaceUri != "nothing")){
+  while((spaceUri != space)&&(spaceUri != URI_NOTHING)){
     while (c != '\n'){
       c = graphFile.read();
     }
@@ -204,7 +209,7 @@ String writeTriple(String space, String subject, String predicate, String object
   }
   
   //Si ha salido del while anterior y el fichero no está vacío, es que el espacio que se ha pasado a la función existe en el fichero y leemos el nombre de su carpeta asociada.
-  if (spaceUri != "nothing"){
+  if (spaceUri != URI_NOTHING){
     //Leer la parte del nombre de la carpeta
     spaceFolder = readSpaceFolder(graphFile);
     Serial.println("2. spaceFolder:" + spaceFolder);
@@ -215,9 +220,9 @@ String writeTriple(String space, String subject, String predicate, String object
   Serial.print(spaceUri);
   Serial.println("|");
   //Si no se ha encontrado el espacio en el fichero, se introduce en el spaces.txt y se crea una carpeta
-  if (spaceUri == "nothing"){ 
+  if (spaceUri == URI_NOTHING){ 
     Serial.println("4. spaceUri es 'nothing'");
-    spacesFile = SD.open("spaces.txt", FILE_WRITE);
+    spacesFile = SD.open(SPACE_FILE, FILE_WRITE);
     if (spacesFile) { 
       spacesFile.print(space);
       spacesFile.print("|SP");
