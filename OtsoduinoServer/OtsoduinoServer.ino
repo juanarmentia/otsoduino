@@ -37,7 +37,7 @@ unsigned long startTime;                      //Momento en el que inicia el prog
 unsigned long timesCounter = 0;               //Número de veces que se ha ejecutado el Write para cálcular cuando se tiene que ejecutar de nuevo
 unsigned int interval = 30;                   //Intervalo de tiempo para que se ejecute el write
 boolean firstWrite = true;                    //Para controlar si es la primera tripleta de un grafo o son las siguientes las que se escriben
-unsigned int iURL_part2 = 0;                   //Segunda parte de la uri del grafo --> Random(100-999)
+int iURL_part2 = 0;                   //Segunda parte de la uri del grafo --> Random(100-999)
 char URL_part2[30];
 
 char c;                                       //Carácter en el que se almacena el carácter leído de fichero
