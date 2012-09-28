@@ -52,6 +52,11 @@ char* antes = "Antes del while\0";
 char* despues = "Despues del while\0";
 char* creating7 = "7. Creating \0";
 
+boolean selectedDirectory = false;
+char selectedPath[64];
+char uriGraph[64];
+
+
 void setup()
 {
   delay(2000);
@@ -274,9 +279,8 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object){
 	strcat(uriGraph, "/");
 	strcat(uriGraph, URL_part2);
 	strcat(uriGraph, ".txt\0");
-	Serial.print("2uriGraph: II");
+	Serial.print("2uriGraph: ");
 	Serial.print(uriGraph);
-	Serial.print("II");
 	}
 	delay(3000);
 	Serial.println(despues);
@@ -297,6 +301,7 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object){
 	graphFile.print(predicate);
 	graphFile.print('|');
 	graphFile.println(object);
+	graphFile.print('|');
 	graphFile.close();
 	}
 	Serial.print("8. uri: ");
@@ -319,6 +324,9 @@ char* readGraph(char* space, char* subject, char* predicate, char* object){
 	//Si es directorio se guarda el nombre en una variable space_uri o uri. Y si es fichero, se guarda su nombre y se parsea en busca del patrón. 
 	//Cuando se encuentre el patrón, se lee de nuevo ese fichero que tendrá la ruta siguiente (SD:\space_uri\uri\nombre_fichero.txt) y cada tripleta se mete en un String respuesta = "uri|s;p;o|s;p;o|s;p;o".
 	
+	memset(selectedPath, '\0', 64);
+	memset(uriGraph, '\0', 64);
+
 	File fileSpaces = SD.open("SPACES.TXT");
 	while(strcmp(readSpaceUri(fileSpaces),space)!=0){
 		readSpaceFolder(fileSpaces);
@@ -328,16 +336,21 @@ char* readGraph(char* space, char* subject, char* predicate, char* object){
 	char folder[30];
 	memset(folder, '\0', 30);
 	strcpy(folder, readSpaceFolder(fileSpaces));
+	fileSpaces.close();
 	
 	File root = SD.open("/");
 
-	searchDirectory(root, 0, true, folder);  
+	searchPath(root, 0, true, folder, subject, predicate, object, space);
+	Serial.println(selectedPath);
+	Serial.println(uriGraph);
+
+	root.close();
 	
 	return "";
 }
 
 
-void searchDirectory(File dir, int numTabs, boolean firstFile, char* folder) {
+void searchPath(File dir, int numTabs, boolean firstFile, char* folder, char* subject, char*predicate, char* object, char* space) {
     
 	while(true) {
 
@@ -346,50 +359,42 @@ void searchDirectory(File dir, int numTabs, boolean firstFile, char* folder) {
 		}
 		File entry =  dir.openNextFile();
 		if (! entry) {
-			// no more files
 			//Serial.println("**nomorefiles**");
 			break;
 		}
-		//for (uint8_t i=0; i<numTabs; i++) {
-		//  Serial.print('\t');
-		//}
-		//Serial.print(entry.name());
 		if (entry.isDirectory()) {
-			Serial.print(entry.name());
-			Serial.println("*");
-			Serial.print(folder);
-			Serial.println("*");
-			if(strcmp(entry.name(),folder)==0){
-				Serial.print("Directorio: ");
+			if(atoi(entry.name()) == atoi(folder)){
 				strcpy(directory, entry.name());
 				strcat(directory, "/");
-				Serial.print("Directorio: ");
-				Serial.println(directory);
+				selectedDirectory = true;
 			}
 			else
 			{
-				Serial.println(sizeof(entry.name()));
-				Serial.println(sizeof(folder));
+				selectedDirectory = false;
 			}
 			firstFile = false;
-			searchDirectory(entry, numTabs+1, firstFile, folder);
-		} else {
-		// files have sizes, directories do not
-			//Serial.print("\t\t");
-			//Serial.println(entry.size(), DEC);
-			//PrintFile(entry, entry.name(), directory);
+			searchPath(entry, numTabs+1, firstFile, folder, subject, predicate, object, space);
+		} else if(selectedDirectory) {
+				File selectedFile = SD.open(strcat(directory,entry.name()));
+				if (strcmp(readSpaceUri(selectedFile),subject) == 0)
+					if(strcmp(readSpaceUri(selectedFile),predicate) == 0)
+						if(strcmp(readSpaceUri(selectedFile),object) == 0){
+							strcpy(selectedPath, directory);
+							strcat(uriGraph, space);
+							strcat(uriGraph, "/");
+							strcat(uriGraph, strtok(entry.name(), "."));
+							exit;
+						}
 		}
-
 	}
 }
 
 void PrintFile(File myFile, char* myFileName, char* directory){
 
-	//Serial.println(directory);
 	if (strcmp(directory, "\0")!= 0){
 		strcat(directory,myFileName);
 		strcpy(myFileName,directory);
-		//Serial.println(myFileName);
+
 	}
 	// re-open the file for reading:
 	myFile = SD.open(myFileName);
@@ -397,17 +402,16 @@ void PrintFile(File myFile, char* myFileName, char* directory){
 		Serial.println("**********************************");
 		Serial.println(myFileName);
   
-
-	// read from the file until there's nothing else in it:
-	while (myFile.available()) {
-		Serial.write(myFile.read());
-	}
-	// close the file:
-	myFile.close();
+		// read from the file until there's nothing else in it:
+		while (myFile.available()) {
+			Serial.write(myFile.read());
+		}
+		// close the file:
+		myFile.close();
 	} else {
-	// if the file didn't open, print an error:
-	Serial.print("Error opening ");
-	Serial.println(myFileName);
+		// if the file didn't open, print an error:
+		Serial.print("Error opening ");
+		Serial.println(myFileName);
 	}
 	Serial.println("-------------------------------------");
 }
