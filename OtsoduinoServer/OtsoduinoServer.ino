@@ -35,33 +35,40 @@ File spacesFile;
 
 unsigned long startTime;                      //Momento en el que inicia el programa
 unsigned long timesCounter = 0;               //Número de veces que se ha ejecutado el Write para cálcular cuando se tiene que ejecutar de nuevo
-unsigned int interval = 30;                   //Intervalo de tiempo para que se ejecute el write
+unsigned int interval = 3000;                   //Intervalo de tiempo para que se ejecute el write
 boolean firstWrite = true;                    //Para controlar si es la primera tripleta de un grafo o son las siguientes las que se escriben
-int iURL_part2 = 0;                   //Segunda parte de la uri del grafo --> Random(100-999)
+unsigned int iURL_part2 = 0;                   //Segunda parte de la uri del grafo --> Random(100-999)
 char URL_part2[30];
+
+boolean firstFile = true;
+char directory[30];
 
 char c;                                       //Carácter en el que se almacena el carácter leído de fichero
 unsigned int indexSpace = EEPROM_readint(0);  //Se guarda el índice del espacio para guardar en spaces.txt (space1000, space1001...)
 
 //char cUriGraph[18]; // to Store the name of each file "XXX.txt"
 
+char* antes = "Antes del while\0";
+char* despues = "Despues del while\0";
+char* creating7 = "7. Creating \0";
+
 void setup()
 {
-  delay(5000);
-  Serial.begin(9600);
-  Serial.print("EEPROM: ");
-  Serial.println(indexSpace);
-  Serial.print("Initializing SD card...");
+  delay(2000);
+  Serial.begin(115200);
+  //Serial.print("EEPROM: ");
+  //Serial.println(indexSpace);
+  //Serial.print("Initializing SD card...");
   // On the Ethernet Shield, CS is pin 4. It's set as an output by default.
   // Note that even if it's not used as the CS pin, the hardware SS pin
   // (10 on most Arduino boards, 53 on the Mega) must be left as an output
   // or the SD library functions will not work.
-  pinMode(10, OUTPUT);
-  if (!SD.begin(4)) {
+  pinMode(53, OUTPUT);
+  while (!SD.begin(53)) {
     Serial.println("initialization failed!");
-    return;
+    //return;
   }
-  Serial.println("initialization done.");
+  //Serial.println("initialization done.");
   
   
   // start the Ethernet connection and the server:
@@ -76,33 +83,35 @@ void setup()
 
 void loop()
 {
-  if (millis()/1000>(startTime/1000+(interval*timesCounter))){
-    timesCounter++;
-//    Serial.println(startTime);
-//    Serial.println(millis());
-    Serial.println(timesCounter);
+	if (millis()/1000>(startTime/1000+(interval*timesCounter))){
+	timesCounter++;
+	//    Serial.println(startTime);
+	//    Serial.println(millis());
+	Serial.println();
     
-    writeTriple("http://otsopack3", "subject1", "predicate1", "object1");
-    //Serial.println();
-    delay(300);
-    writeTriple("http://otsopack3", "subject2", "predicate2", "object2");
-    Serial.println();
-    delay(300);
-    firstWrite = true;
-    delay(1000);
-//    
-//    writeTriple("http://otsopack2", "subject1", "predicate1", "object1");
-//    Serial.println();
-//    Serial.println();
-//    writeTriple("http://otsopack2", "subject3", "predicate3", "object3", firstWrite);
-//    Serial.println();  
-//    firstWrite = true;
-//    myFile = SD.open("/");
-//    printDirectory(myFile, 0);
-//    delay(1000);
-  }
+	readGraph("http://otsopack3", "subject2", "predicate2", "object2");
+
+	//writeTriple("http://otsopack3", "subject1", "predicate1", "object1");
+	Serial.println();
+	delay(1000);
+	//writeTriple("http://otsopack3", "subject2", "predicate2", "object2");
+	//Serial.println();
+	//delay(300);
+	firstWrite = true;
+	delay(1000);
+	//    
+	//    writeTriple("http://otsopack2", "subject1", "predicate1", "object1");
+	//    Serial.println();
+	//    Serial.println();
+	//    writeTriple("http://otsopack2", "subject3", "predicate3", "object3", firstWrite);
+	//    Serial.println();  
+	//    firstWrite = true;
+	//    myFile = SD.open("/");
+	//    printDirectory(myFile, 0);
+	//    delay(1000);
+	}
   
-  //httpServer();
+	//httpServer();
   
   
 }
@@ -158,201 +167,281 @@ void loop()
 
 
 
+char* writeTriple(char* space, char* subject, char* predicate, char* object){
+  
+	File graphFile;
+	Serial.print("1. Dentro de writeTriple: ");
+	Serial.println(indexSpace);
+	char spaceUri[64];    //URI del espacio
+	memset(spaceUri, '\0', 64);      
+	char spaceFolder[30];    //Nombre de la carpeta correspondiente al espacio
+	memset(spaceFolder, '\0', 30);
+  
+  
+	//Se empiela a leer spaces.txt para ver si existe el espacio
+	graphFile = SD.open("spaces.txt"); //No utilizar nombres largos de fichero (formato 8.3)
+	strcpy(spaceUri, readSpaceUri(graphFile));
+	Serial.print("1.5. spaceUri: ");
+	Serial.print(spaceUri);
+	Serial.print("|");
+	Serial.print(space);
+	//Serial.println("|");
+  
+	//Si la URI leída en el fichero no es la misma que hemos pasado a la función o el fichero no está vacío, se sigue leyendo.
+	while((strcmp(spaceUri, space)!=0)&&(strcmp(spaceUri, "nothing")!=0)){
+	while (c != '\n'){
+		c = graphFile.read();
+	}
+	memset(spaceUri, '\0', 64);
+	strcpy(spaceUri, readSpaceUri(graphFile));
+	Serial.print("1.75. spaceUri: ");
+	Serial.println(spaceUri);
+	}
+  
+	//Si ha salido del while anterior y el fichero no está vacío, es que el espacio que se ha pasado a la función existe en el fichero y leemos el nombre de su carpeta asociada.
+	if (strcmp(spaceUri, "nothing")!=0){
+	//Leer la parte del nombre de la carpeta
+	memset(spaceFolder, '\0', 30);
+	strcpy(spaceFolder, readSpaceFolder(graphFile));
+	Serial.print("2. spaceFolder: ");
+	Serial.println(spaceFolder);
+	}
+	graphFile.close();
+  
+	Serial.print("3. spaceUri(Nothing): ");
+	Serial.print(spaceUri);
+	//Serial.println("|");
+	//Si no se ha encontrado el espacio en el fichero, se introduce en el spaces.txt y se crea una carpeta
+	if (strcmp(spaceUri, "nothing")==0){ 
+	Serial.println("4. spaceUri es 'nothing'");
+	spacesFile = SD.open("spaces.txt", FILE_WRITE);
+	if (spacesFile) { 
+		spacesFile.print(space);
+		spacesFile.print("|");
+		spacesFile.println(indexSpace); 
+		spacesFile.close();
+	}
+	//Se crea la carpeta
+    
+	memset(spaceFolder, '\0', 30);
+	Serial.print(spaceFolder);
+	sprintf(spaceFolder, "%d", indexSpace);
+	Serial.print("5. spaceFolder: ");
+	//Serial.print("II");
+	Serial.print(spaceFolder);
+	Serial.println("|");
+	SD.mkdir(spaceFolder);
+	indexSpace++;
+	EEPROM_writeint(0, indexSpace);
+	}
+  
+	//Guardar en la SD en el directorio SD:\space_uri\uri.txt las tripletas "s;p;o"
+  
+	//Serial.println(firstWrite);
+	if (firstWrite){
+	//Se crea la URI para el nuevo conjunto de tripletas y se comprueba si existe
+	memset(URL_part2, '\0', 30);
+	iURL_part2 = random(100,999);
+	sprintf(URL_part2, "%u", iURL_part2);
+	}
+    
+	char uriGraph[64];
+	memset(uriGraph, '\0', 64);
+	strcat(uriGraph, spaceFolder);
+	strcat(uriGraph, "/");
+	strcat(uriGraph, URL_part2);
+	strcat(uriGraph, ".txt");
+	Serial.print("1uriGraph: ");
+	Serial.print(uriGraph);
+	//Serial.println("II");
+  
+	//Serial.print(SD.exists(uriGraph));
+	//Serial.println("II");
+	//Serial.print(firstWrite);
+	//Serial.println("II");
+	delay(3000);
+
+	Serial.println(antes); 
+  
+	while((SD.exists(uriGraph))&&(firstWrite)){
+	Serial.println("dentro del while");
+	memset(URL_part2, '\0', 30);
+	iURL_part2 = random(100,999);
+	sprintf(URL_part2, "%d", iURL_part2);
+	Serial.println(URL_part2);
+	memset(uriGraph, '\0', 64);
+	strcat(uriGraph, spaceFolder);
+	strcat(uriGraph, "/");
+	strcat(uriGraph, URL_part2);
+	strcat(uriGraph, ".txt\0");
+	Serial.print("2uriGraph: II");
+	Serial.print(uriGraph);
+	Serial.print("II");
+	}
+	delay(3000);
+	Serial.println(despues);
+	//firstWrite = false;
+	delay(3000);
+  
+	// open a new file and immediately close it:
+	Serial.print(creating7);
+	delay(3000);
+	Serial.print(uriGraph);
+	//Serial.println("II");
+	graphFile = SD.open(uriGraph, FILE_WRITE); //No utilizar nombres largos de fichero
+	Serial.println("Opened");
+	if (graphFile){
+	Serial.println(subject);
+	graphFile.print(subject);
+	graphFile.print('|');
+	graphFile.print(predicate);
+	graphFile.print('|');
+	graphFile.println(object);
+	graphFile.close();
+	}
+	Serial.print("8. uri: ");
+	Serial.print(space);
+	Serial.print("/");
+	Serial.print(URL_part2);
+	//Serial.println("II");
+	Serial.println();
+  
+	char* uri = "http://otsopack/";
+	return strcat(uri,URL_part2);
+}
+
+char* readGraph(char* space, char* subject, char* predicate, char* object){
+  
+	//Hay que recorrer todos los ficheros y carpetas en busca del patrón s,p,o. Cuando se encuentre, se devolverá un String
+	//con todas las líneas del fichero en el que se encuentra el patrón concatenadas (String = "uri|s;p;o|s;p;o|s;p;o");
+ 
+	//Utilizar openNextFile() y isDirectory(). Con openNextFile() se recorren los ficheros, cada iteración se comprueba si es directorio con isDirectory().
+	//Si es directorio se guarda el nombre en una variable space_uri o uri. Y si es fichero, se guarda su nombre y se parsea en busca del patrón. 
+	//Cuando se encuentre el patrón, se lee de nuevo ese fichero que tendrá la ruta siguiente (SD:\space_uri\uri\nombre_fichero.txt) y cada tripleta se mete en un String respuesta = "uri|s;p;o|s;p;o|s;p;o".
+	
+	File fileSpaces = SD.open("SPACES.TXT");
+	while(strcmp(readSpaceUri(fileSpaces),space)!=0){
+		readSpaceFolder(fileSpaces);
+	}
+	//Serial.print("Folder: ");
+	//Serial.println(readSpaceFolder(fileSpaces));
+	char folder[30];
+	memset(folder, '\0', 30);
+	strcpy(folder, readSpaceFolder(fileSpaces));
+	
+	File root = SD.open("/");
+
+	searchDirectory(root, 0, true, folder);  
+	
+	return "";
+}
+
+
+void searchDirectory(File dir, int numTabs, boolean firstFile, char* folder) {
+    
+	while(true) {
+
+		if(firstFile){
+			memset(directory, '\0', 30);
+		}
+		File entry =  dir.openNextFile();
+		if (! entry) {
+			// no more files
+			//Serial.println("**nomorefiles**");
+			break;
+		}
+		//for (uint8_t i=0; i<numTabs; i++) {
+		//  Serial.print('\t');
+		//}
+		//Serial.print(entry.name());
+		if (entry.isDirectory()) {
+			Serial.print(entry.name());
+			Serial.println("*");
+			Serial.print(folder);
+			Serial.println("*");
+			if(strcmp(entry.name(),folder)==0){
+				Serial.print("Directorio: ");
+				strcpy(directory, entry.name());
+				strcat(directory, "/");
+				Serial.print("Directorio: ");
+				Serial.println(directory);
+			}
+			else
+			{
+				Serial.println(sizeof(entry.name()));
+				Serial.println(sizeof(folder));
+			}
+			firstFile = false;
+			searchDirectory(entry, numTabs+1, firstFile, folder);
+		} else {
+		// files have sizes, directories do not
+			//Serial.print("\t\t");
+			//Serial.println(entry.size(), DEC);
+			//PrintFile(entry, entry.name(), directory);
+		}
+
+	}
+}
+
+void PrintFile(File myFile, char* myFileName, char* directory){
+
+	//Serial.println(directory);
+	if (strcmp(directory, "\0")!= 0){
+		strcat(directory,myFileName);
+		strcpy(myFileName,directory);
+		//Serial.println(myFileName);
+	}
+	// re-open the file for reading:
+	myFile = SD.open(myFileName);
+	if (myFile) {
+		Serial.println("**********************************");
+		Serial.println(myFileName);
+  
+
+	// read from the file until there's nothing else in it:
+	while (myFile.available()) {
+		Serial.write(myFile.read());
+	}
+	// close the file:
+	myFile.close();
+	} else {
+	// if the file didn't open, print an error:
+	Serial.print("Error opening ");
+	Serial.println(myFileName);
+	}
+	Serial.println("-------------------------------------");
+}
+
+//Read the side where space`s URI is written
 char* readSpaceUri(File gFile){
-  char* rSpaceUri = "";
-  c = gFile.read();
+  char rSpaceUri[64];
+  memset(rSpaceUri, '\0', 64);
+  int index = 0;
+  char c = gFile.read();
   if (c!=-1){
-    while (c != '|'){
-       rSpaceUri += c;
-       c = gFile.read();
+    while ((c != '|')){     
+      rSpaceUri[index++] = c;
+      c = gFile.read();      
     }
+    delay(200);
   }
   else{
-    rSpaceUri = "nothing"; 
+    return "nothing"; 
   }
   return rSpaceUri;
 }
 
+//Read the side where the folder, relationated with the space's URI, is written
 char* readSpaceFolder(File gFile){
-  char* rSpaceFolder = "";
-  c = gFile.read();
-  while (c != '\n'){
-    rSpaceFolder += c;
+  char rSpaceFolder[64];
+  memset(rSpaceFolder, '\0', 64);
+  int index = 0;
+  char c = gFile.read();
+  while ((c != '\n')&&(c != ' ')){
+    
+    rSpaceFolder[index++] = c;
+    delay(200);
     c = gFile.read();
   }
   return rSpaceFolder;
 }
-
-char* writeTriple(char* space, char* subject, char* predicate, char* object){
-  
-  File graphFile;
-  Serial.print("1. Dentro de writeTriple: ");
-  Serial.println(indexSpace);
-  char* spaceUri = "";      //URI del espacio
-  char* spaceFolder = "";   //Nombre de la carpeta correspondiente al espacio
-  
-  
-  //Se empiela a leer spaces.txt para ver si existe el espacio
-  graphFile = SD.open("spaces.txt"); //No utilizar nombres largos de fichero (formato 8.3)
-  spaceUri = readSpaceUri(graphFile);
-  //Serial.println("1.5. spaceUri: " + spaceUri);
-  
-  //Si la URI leída en el fichero no es la misma que hemos pasado a la función o el fichero no está vacío, se sigue leyendo.
-  while((spaceUri != space)&&(spaceUri != "nothing")){
-    while (c != '\n'){
-      c = graphFile.read();
-    }
-    spaceUri = readSpaceUri(graphFile);
-  }
-  
-  //Si ha salido del while anterior y el fichero no está vacío, es que el espacio que se ha pasado a la función existe en el fichero y leemos el nombre de su carpeta asociada.
-  if (spaceUri != "nothing"){
-    //Leer la parte del nombre de la carpeta
-    spaceFolder = readSpaceFolder(graphFile);
-    Serial.print("2. spaceFolder: ");
-    Serial.println(spaceFolder);
-  }
-  graphFile.close();
-  
-  Serial.print("3. spaceUri(Nothing): |");
-  Serial.print(spaceUri);
-  Serial.println("|");
-  //Si no se ha encontrado el espacio en el fichero, se introduce en el spaces.txt y se crea una carpeta
-  if (spaceUri == "nothing"){ 
-    Serial.println("4. spaceUri es 'nothing'");
-    spacesFile = SD.open("spaces.txt", FILE_WRITE);
-    if (spacesFile) { 
-      spacesFile.print(space);
-      spacesFile.print("|SP");
-      spacesFile.println(indexSpace); 
-      spacesFile.close();
-    }
-    //Se crea la carpeta
-    
-    spaceFolder = "SP"; 
-    sprintf(spaceFolder, "%d", indexSpace);
-    Serial.print("5. spaceFolder: ");
-    Serial.println(spaceFolder);
-    Serial.println(indexSpace);
-    Serial.print("|");
-    Serial.print(spaceFolder);
-    Serial.println("|");
-    SD.mkdir(spaceFolder);
-    indexSpace++;
-    EEPROM_writeint(0, indexSpace);
-  }
-  
-  //Guardar en la SD en el directorio SD:\space_uri\uri.txt las tripletas "s;p;o"
-  
-  //Serial.println(firstWrite);
-  if (firstWrite){
-    //Se crea la URI para el nuevo conjunto de tripletas y se comprueba si existe
-    iURL_part2 = random(100,999);
-    sprintf(URL_part2, "%d", iURL_part2);
-  }
-    
-  char uriGraph[18];
-  uriGraph[0]=0;
-  strcat(uriGraph, spaceFolder);
-  strcat(uriGraph, "/");
-  strcat(uriGraph, URL_part2);
-  strcat(uriGraph, ".txt\0");
-  Serial.print("uriGraph: |");
-  Serial.print(uriGraph);
-  Serial.println("|");
-  
-  
-  while((SD.exists(uriGraph))&&(firstWrite)){
-    iURL_part2 = random(100,999);
-    sprintf(URL_part2, "%d", iURL_part2);
-    uriGraph[0]=0;
-    strcat(uriGraph, spaceFolder);
-    strcat(uriGraph, "/");
-    strcat(uriGraph, URL_part2);
-    strcat(uriGraph, ".txt\0");
-    Serial.print("uriGraph: |");
-    Serial.print(uriGraph);
-    Serial.print("|");
-  }
-  
-  Serial.println();
-  firstWrite = false;
-  
-  
-  // open a new file and immediately close it:
-  Serial.print("7. Creating |");
-  Serial.print(uriGraph);
-  Serial.println("|");
-  graphFile = SD.open(uriGraph, FILE_WRITE); //No utilizar nombres largos de fichero
-  Serial.println("Opened");
-  if (graphFile){
-    //Serial.println(subject+predicate+object);
-    graphFile.print(subject);
-    graphFile.print('|');
-    graphFile.print(predicate);
-    graphFile.print('|');
-    graphFile.println(object);
-    graphFile.close();
-  }
-  Serial.print("8. uri: |");
-  Serial.print(space);
-  Serial.print("/");
-  Serial.print(URL_part2);
-  Serial.println("|");
-  
-  char* uri = "http://otsopack/";
-  return strcat(uri,URL_part2);
-}
-
-//String readGraph(String space, String subject, String predicate, String object){
-//  
-//  //Hay que recorrer todos los ficheros y carpetas en busca del patrón s,p,o. Cuando se encuentre, se devolverá un String
-//  //con todas las líneas del fichero en el que se encuentra el patrón concatenadas (String = "uri|s;p;o|s;p;o|s;p;o");
-//  
-//  //Utilizar openNextFile() y isDirectory(). Con openNextFile() se recorren los ficheros, cada iteración se comprueba si es directorio con isDirectory().
-//  //Si es directorio se guarda el nombre en una variable space_uri o uri. Y si es fichero, se guarda su nombre y se parsea en busca del patrón. 
-//  //Cuando se encuentre el patrón, se lee de nuevo ese fichero que tendrá la ruta siguiente (SD:\space_uri\uri\nombre_fichero.txt) y cada tripleta se mete en un String respuesta = "uri|s;p;o|s;p;o|s;p;o".
-//  
-//  // re-open the file for reading:
-//  myFile = SD.open("test.txt");
-//  if (myFile) {
-//    Serial.println("test.txt:");
-//   
-//    // read from the file until there's nothing else in it:
-//    while (myFile.available()) {
-//        Serial.write(myFile.read());
-//    }
-//    // close the file:
-//    myFile.close();
-//  } else {
-//    // if the file didn't open, print an error:
-//    Serial.println("error opening test.txt");
-//  }
-//  
-//  return "";
-//}
-//
-//
-//void printDirectory(File dir, int numTabs) {
-//   while(true) {
-//
-//     File entry =  dir.openNextFile();
-//     if (! entry) {
-//       // no more files
-//       Serial.println("**nomorefiles**");
-//       break;
-//     }
-//     for (uint8_t i=0; i<numTabs; i++) {
-//       Serial.print('\t');
-//     }
-//     Serial.print(entry.name());
-//     if (entry.isDirectory()) {
-//       Serial.println("/");
-//       printDirectory(entry, numTabs+1);
-//     } else {
-//       // files have sizes, directories do not
-//       Serial.print("\t\t");
-//       Serial.println(entry.size(), DEC);
-//     }
-//   }
-//}
