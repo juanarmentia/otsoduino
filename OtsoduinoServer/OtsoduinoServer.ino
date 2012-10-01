@@ -46,15 +46,26 @@ char directory[30];
 char c;                                       //Carácter en el que se almacena el carácter leído de fichero
 unsigned int indexSpace = EEPROM_readint(0);  //Se guarda el índice del espacio para guardar en spaces.txt (space1000, space1001...)
 
-//char cUriGraph[18]; // to Store the name of each file "XXX.txt"
-
-char* antes = "Antes del while\0";
-char* despues = "Despues del while\0";
-char* creating7 = "7. Creating \0";
 
 boolean selectedDirectory = false;
 char selectedPath[64];
 char uriGraph[64];
+
+//CONSTANTS
+char* uriSpaceConst		= "http://otsopack3";
+char* subjectConst1		= "subject1";
+char* predicateConst1	= "predicate1";
+char* objectConst1		= "object1";
+char* subjectConst2		= "subject2";
+char* predicateConst2	= "predicate2";
+char* objectConst2		= "object2";
+char* spacesIndexConst	= "SPACES.TXT";
+char* nothingConst		= "nothing";
+char* extConst			= ".txt";
+char* sepConst			= "|";
+char* sepUrlConst		= "/";
+char* pointConst		= ".";
+char* nullConst			= "\0";
 
 
 void setup()
@@ -81,8 +92,6 @@ void setup()
 //  server.begin();
   //Serial.println(Ethernet.localIP());
   
-  
-  
   startTime = millis();
 }
 
@@ -94,26 +103,25 @@ void loop()
 	//    Serial.println(millis());
 	Serial.println();
     
-	readGraph("http://otsopack3", "subject2", "predicate2", "object2");
+	//Serial.println(readGraph(uriSpaceConst, subjectConst2, predicateConst2, objectConst2));
 
-	//writeTriple("http://otsopack3", "subject1", "predicate1", "object1");
+	
+	Serial.println(writeTriple(uriSpaceConst, subjectConst1, predicateConst1, objectConst1));
 	Serial.println();
 	delay(1000);
-	//writeTriple("http://otsopack3", "subject2", "predicate2", "object2");
-	//Serial.println();
-	//delay(300);
+	
+	Serial.println(writeTriple(uriSpaceConst, subjectConst2, predicateConst2, objectConst2));
+	delay(300);
 	firstWrite = true;
 	delay(1000);
-	//    
-	//    writeTriple("http://otsopack2", "subject1", "predicate1", "object1");
-	//    Serial.println();
-	//    Serial.println();
-	//    writeTriple("http://otsopack2", "subject3", "predicate3", "object3", firstWrite);
-	//    Serial.println();  
-	//    firstWrite = true;
-	//    myFile = SD.open("/");
-	//    printDirectory(myFile, 0);
-	//    delay(1000);
+	    
+	//writeTriple("http://otsopack2", "subject1", "predicate1", "object1");
+	//Serial.println();
+	//Serial.println();
+	//writeTriple("http://otsopack2", "subject3", "predicate3", "object3", firstWrite);
+	//Serial.println();  
+	//firstWrite = true;
+	//delay(1000);
 	}
   
 	//httpServer();
@@ -184,16 +192,15 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object){
   
   
 	//Se empiela a leer spaces.txt para ver si existe el espacio
-	graphFile = SD.open("spaces.txt"); //No utilizar nombres largos de fichero (formato 8.3)
+	graphFile = SD.open(spacesIndexConst); //No utilizar nombres largos de fichero (formato 8.3)
 	strcpy(spaceUri, readSpaceUri(graphFile));
 	Serial.print("1.5. spaceUri: ");
 	Serial.print(spaceUri);
 	Serial.print("|");
-	Serial.print(space);
-	//Serial.println("|");
+	Serial.println(space);
   
 	//Si la URI leída en el fichero no es la misma que hemos pasado a la función o el fichero no está vacío, se sigue leyendo.
-	while((strcmp(spaceUri, space)!=0)&&(strcmp(spaceUri, "nothing")!=0)){
+	while((strcmp(spaceUri, space)!=0)&&(strcmp(spaceUri, nothingConst)!=0)){
 	while (c != '\n'){
 		c = graphFile.read();
 	}
@@ -204,7 +211,7 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object){
 	}
   
 	//Si ha salido del while anterior y el fichero no está vacío, es que el espacio que se ha pasado a la función existe en el fichero y leemos el nombre de su carpeta asociada.
-	if (strcmp(spaceUri, "nothing")!=0){
+	if (strcmp(spaceUri, nothingConst)!=0){
 	//Leer la parte del nombre de la carpeta
 	memset(spaceFolder, '\0', 30);
 	strcpy(spaceFolder, readSpaceFolder(graphFile));
@@ -214,15 +221,14 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object){
 	graphFile.close();
   
 	Serial.print("3. spaceUri(Nothing): ");
-	Serial.print(spaceUri);
-	//Serial.println("|");
+	Serial.println(spaceUri);
 	//Si no se ha encontrado el espacio en el fichero, se introduce en el spaces.txt y se crea una carpeta
-	if (strcmp(spaceUri, "nothing")==0){ 
+	if (strcmp(spaceUri, nothingConst)==0){ 
 	Serial.println("4. spaceUri es 'nothing'");
-	spacesFile = SD.open("spaces.txt", FILE_WRITE);
+	spacesFile = SD.open(spacesIndexConst, FILE_WRITE);
 	if (spacesFile) { 
 		spacesFile.print(space);
-		spacesFile.print("|");
+		spacesFile.print(sepConst);
 		spacesFile.println(indexSpace); 
 		spacesFile.close();
 	}
@@ -230,11 +236,9 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object){
     
 	memset(spaceFolder, '\0', 30);
 	Serial.print(spaceFolder);
-	sprintf(spaceFolder, "%d", indexSpace);
+	itoa(indexSpace, spaceFolder, 10);
 	Serial.print("5. spaceFolder: ");
-	//Serial.print("II");
-	Serial.print(spaceFolder);
-	Serial.println("|");
+	Serial.println(spaceFolder);
 	SD.mkdir(spaceFolder);
 	indexSpace++;
 	EEPROM_writeint(0, indexSpace);
@@ -247,72 +251,74 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object){
 	//Se crea la URI para el nuevo conjunto de tripletas y se comprueba si existe
 	memset(URL_part2, '\0', 30);
 	iURL_part2 = random(100,999);
-	sprintf(URL_part2, "%u", iURL_part2);
+	itoa(iURL_part2, URL_part2, 10);
 	}
     
 	char uriGraph[64];
 	memset(uriGraph, '\0', 64);
 	strcat(uriGraph, spaceFolder);
-	strcat(uriGraph, "/");
+	strcat(uriGraph, sepUrlConst);
 	strcat(uriGraph, URL_part2);
-	strcat(uriGraph, ".txt");
+	strcat(uriGraph, extConst);
 	Serial.print("1uriGraph: ");
-	Serial.print(uriGraph);
-	//Serial.println("II");
+	Serial.println(uriGraph);
   
 	//Serial.print(SD.exists(uriGraph));
 	//Serial.println("II");
 	//Serial.print(firstWrite);
 	//Serial.println("II");
-	delay(3000);
-
-	Serial.println(antes); 
   
 	while((SD.exists(uriGraph))&&(firstWrite)){
 	Serial.println("dentro del while");
 	memset(URL_part2, '\0', 30);
 	iURL_part2 = random(100,999);
-	sprintf(URL_part2, "%d", iURL_part2);
+	itoa(iURL_part2, URL_part2, 10);
 	Serial.println(URL_part2);
 	memset(uriGraph, '\0', 64);
 	strcat(uriGraph, spaceFolder);
-	strcat(uriGraph, "/");
+	strcat(uriGraph, sepUrlConst);
 	strcat(uriGraph, URL_part2);
-	strcat(uriGraph, ".txt\0");
+	strcat(uriGraph, extConst);
 	Serial.print("2uriGraph: ");
 	Serial.print(uriGraph);
 	}
-	delay(3000);
-	Serial.println(despues);
+
 	//firstWrite = false;
 	delay(3000);
   
 	// open a new file and immediately close it:
-	Serial.print(creating7);
+	Serial.print("7. Creating ");
 	delay(3000);
-	Serial.print(uriGraph);
-	//Serial.println("II");
-	graphFile = SD.open(uriGraph, FILE_WRITE); //No utilizar nombres largos de fichero
-	Serial.println("Opened");
+	char uriGraphcpy[64];
+	memset(uriGraphcpy, '\0', 64);
+	char * pch;
+	pch = strtok (uriGraph,"\r");
+	strcat(uriGraphcpy, pch);
+	while (pch != NULL)
+	{
+		pch = strtok (NULL, "\n");
+		strcat(uriGraphcpy, pch);
+	}
+	Serial.println(uriGraphcpy);
+	graphFile = SD.open(uriGraphcpy, FILE_WRITE); //No utilizar nombres largos de fichero
 	if (graphFile){
 	Serial.println(subject);
 	graphFile.print(subject);
 	graphFile.print('|');
 	graphFile.print(predicate);
 	graphFile.print('|');
-	graphFile.println(object);
-	graphFile.print('|');
+	graphFile.print(object);
+	graphFile.println('|');
 	graphFile.close();
 	}
-	Serial.print("8. uri: ");
-	Serial.print(space);
-	Serial.print("/");
-	Serial.print(URL_part2);
-	//Serial.println("II");
-	Serial.println();
-  
-	char* uri = "http://otsopack/";
-	return strcat(uri,URL_part2);
+
+	char uriGraphReturn[64];
+	memset(uriGraphReturn, '\0', 64);
+	strcat(uriGraphReturn, space);
+	strcat(uriGraphReturn, sepUrlConst);
+	strcat(uriGraphReturn, strtok(uriGraphcpy, ".")); 
+	  
+	return uriGraphReturn;
 }
 
 char* readGraph(char* space, char* subject, char* predicate, char* object){
@@ -342,11 +348,11 @@ char* readGraph(char* space, char* subject, char* predicate, char* object){
 
 	searchPath(root, 0, true, folder, subject, predicate, object, space);
 	Serial.println(selectedPath);
-	Serial.println(uriGraph);
+	//Serial.println(uriGraph);
 
 	root.close();
 	
-	return "";
+	return uriGraph;
 }
 
 
@@ -382,7 +388,7 @@ void searchPath(File dir, int numTabs, boolean firstFile, char* folder, char* su
 							strcpy(selectedPath, directory);
 							strcat(uriGraph, space);
 							strcat(uriGraph, "/");
-							strcat(uriGraph, strtok(entry.name(), "."));
+							strcat(uriGraph, strtok(directory, "."));
 							exit;
 						}
 		}
