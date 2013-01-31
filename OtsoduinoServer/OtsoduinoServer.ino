@@ -70,7 +70,7 @@ void setup()
   Ethernet.begin(mac, ip);
   server.begin();
   //readGraph(uriSpaceConst1,"1107");
-  readGraph(uriSpaceConst1, subjectConst2, predicateConst2, objectConst2);
+  //readGraph(uriSpaceConst1, subjectConst2, predicateConst2, objectConst2);
   startTime = millis();
   Serial.print("millis(): ");
   Serial.println(startTime);
@@ -103,7 +103,7 @@ void loop()
 		//delay(1000);
 	}*/
   
-	//httpServer();
+	httpServer();
   
 }
 

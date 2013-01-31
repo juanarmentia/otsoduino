@@ -30,6 +30,11 @@ void httpServer(){
 	memset(bufferPredicateVar, '\0', 64);
 	char bufferObjectVar[64];
 	memset(bufferObjectVar, '\0', 64);
+
+	char urlSpace[64];
+	char urlSubject[64];
+	char urlPredicate[64];
+	char urlObject[64];
 	
 	int indexBuffer = 0;
 	boolean isGraphVar = true;
@@ -42,6 +47,7 @@ void httpServer(){
 		if (client.available()) {
 		char c = client.read();
 		//client.print(c);
+		Serial.print(c);
 		// if you've gotten to the end of the line (received a newline
 		// character) and the line is blank, the http request has ended,
 		// so you can send a reply
@@ -163,27 +169,29 @@ void httpServer(){
 			contSep = 0;
 			isGraphVar = true;
 
+			client.println(identifyGet);
+
 			if(strcmp(identifyGet, "110")==0){
 				client.println("110 dentro");
 				client.println(urldecode(bufferSpaceVar));
 
 				client.println(readGraph(urldecode(bufferSpaceVar),"1107"));
 			}
-			if(strcmp(identifyGet, "111")==0){
-				client.println("111 dentro");
-				client.println("urldecode(uriSpaceConst1)");
+			if(strcmp(identifyGet, "101")==0){
+				client.println("101 dentro");
 
-				client.println(readGraph(urldecode(bufferSpaceVar), bufferSubjectVar, bufferPredicateVar, urldecode(bufferObjectVar)));
+				memset(urlSpace, '\0', 64);
+				strcpy(urlSpace,urldecode(bufferSpaceVar));
+				memset(urlSubject, '\0', 64);
+				strcpy(urlSubject,urldecode(bufferSubjectVar));
+				memset(urlPredicate, '\0', 64);
+				strcpy(urlPredicate,urldecode(bufferPredicateVar));
+				memset(urlObject, '\0', 64);
+				strcpy(urlObject,urldecode(bufferObjectVar));
+				createGraph(readGraph(urlSpace, urlSubject, urlPredicate, urlObject), client);
+				//FUNCIÓN QUE CREA EL GRAFO DEL STRING RECIBIDO EN READGRAPH()
 			}
 
-			// output the value of each analog input pin
-			//for (int analogChannel = 0; analogChannel < 6; analogChannel++) {
-			//	client.print("analog input ");
-			//	client.print(analogChannel);
-			//	client.print(" is ");
-			//	client.print(analogRead(analogChannel));
-			//	client.println("<br />");
-			//}
 			break;
 			memset(bufferSpace, '\0', 15);
 			memset(bufferGraph, '\0', 15);
@@ -265,4 +273,13 @@ char* urldecode(char* url) {
 		}
 	}
 	return dest;
+}
+
+
+
+int isUrl(char* term){
+	if(term[0]=='h' & term[0]=='t' & term[0]=='t' & term[0]=='p' & term[0]==':' & term[0]=='/'){
+		return 1;
+	}
+	else return 0;
 }
