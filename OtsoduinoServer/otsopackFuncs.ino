@@ -130,11 +130,11 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
 }
 
 
-
+//GET /spaces/(uri: space)/graphs/(uri: graph)
 //***********************************************************************************************
-// FUNCIÓN   READGRAPH(SPACE, GRAPH)::Devuelve URI de un grafo como el que se le ha pasado 
+// FUNCIÓN   READGRAPH(SPACE, GRAPH) 
 //***********************************************************************************************
-char* readGraph(char* space, char* graph){
+char* readGraph(char* spaceUri, char* graphUri){
   
 	//Hay que recorrer todos los ficheros y carpetas en busca del patrón s,p,o. Cuando se encuentre, se devolverá un String
 	//con todas las líneas del fichero en el que se encuentra el patrón concatenadas (String = "uri|s;p;o|s;p;o|s;p;o");
@@ -143,38 +143,77 @@ char* readGraph(char* space, char* graph){
 	//Si es directorio se guarda el nombre en una variable space_uri o uri. Y si es fichero, se guarda su nombre y se parsea en busca del patrón. 
 	//Cuando se encuentre el patrón, se lee de nuevo ese fichero que tendrá la ruta siguiente (SD:\space_uri\uri\nombre_fichero.txt) y cada tripleta se mete en un String respuesta = "uri|s;p;o|s;p;o|s;p;o".
 	
+	int index = 0;
+	int spaceExist = 0;
+	
 	memset(selectedPath, '\0', 64);
 	memset(uriGraph, '\0', 64);
+	char part1Mac[15];
+	memset(part1Mac, '\0',15);
+	char part2Path[15];
+	memset(part2Path, '\0',15);
+	char path[15];
+	memset(path, '\0', 15);
+	char aux[15];
+	memset(aux, '\0',15);
+	char spaceNumber[15];
+	memset(spaceNumber, '\0',15);
+	char folder[15];
 
-	File fileSpaces = SD.open("SPACES.TXT");
-	while(strcmp(readSpaceUri(fileSpaces),space)!=0){
-		readSpaceFolder(fileSpaces);
+	sepUriGraph(graphUri, part1Mac, part2Path);
+	//Serial.println(part1Mac);
+	//Serial.println(part2Path);
+
+	if (strcmp(part1Mac, macIdentifier)!=0){
+		Serial.println("no coincide");
+		return NULL;
 	}
-	Serial.print("Folder: ");
-	Serial.println(readSpaceFolder(fileSpaces));
-	char folder[30];
-	memset(folder, '\0', 30);
-	strcpy(folder, readSpaceFolder(fileSpaces));
-	fileSpaces.close();
-	
-	Serial.println("uriGraph");
-	strcat(uriGraph, myIP);
-	Serial.println(uriGraph);
-	strcat(uriGraph, space);
-	Serial.println(uriGraph);
-	strcat(uriGraph, sepUrlConst);
-	Serial.println(uriGraph);
-	strcat(uriGraph,folder);
-	Serial.println(uriGraph);
-	strcat(uriGraph, sepUrlConst);
-	Serial.println(uriGraph);
-	strcat(uriGraph, graph);
-	Serial.println(uriGraph);
 
-	return urlencode(uriGraph);
+	sepUriGraph(part2Path, spaceNumber, aux);
+	
+	File fileSpaces = SD.open("SPACES.TXT");
+	while (fileSpaces.available()){
+		readSpaceUri(fileSpaces);
+		memset(folder, '\0', 15);
+		strcpy(folder, readSpaceFolder(fileSpaces));
+		folder[strlen(folder)-1] = '\0';
+		if(strcmp(folder,spaceNumber)==0){
+			spaceExist = 1;
+		}
+	}
+
+	if (spaceExist){
+
+		strcat(path, part2Path);
+		strcat(path, extConst);
+
+		File fileGraph = SD.open(path, FILE_READ);
+		if (fileGraph) { 
+			memset(graph, '\0', 2500);
+			// read from the file until there's nothing else in it:
+			while (fileGraph.available()) {
+				char c = fileGraph.read();
+				if((c!='\n')&&(c!='\r')){
+					graph[index++] = c;
+				}
+			}
+			// close the file:
+			fileGraph.close();
+		} else {
+			// if the file didn't open, print an error:
+			//Serial.print("error opening ");
+			//Serial.println(path);
+			return NULL;
+		}
+
+		//Serial.println(graph);
+	}else return NULL;
+
+	return graph;
 }
 
 
+//GET /spaces/(uri: space)/graphs/wildcards/(uri: subject)/(uri: predicate)/(uri: object)
 //***********************************************************************************************
 // FUNCIÓN   READGRAPH(SPACE, SUBJECT, PREDICATE, OBJECT)::Devuelve URI de un grafo que contiene ésta tripleta
 //***********************************************************************************************
@@ -193,7 +232,7 @@ char* readGraph(char* space, char* subject, char* predicate, char* object){
 	//Se abre el fichero SPACES.TXT donde se encuentra la relación de espacios con número de carpeta
 	File fileSpaces = SD.open("SPACES.TXT");
 	while(strcmp(readSpaceUri(fileSpaces),space)!=0){
-		//readSpaceFolder(fileSpaces);
+		readSpaceFolder(fileSpaces);
 	}
 	//Serial.print("Folder: ");
 	//Serial.println(readSpaceFolder(fileSpaces));
@@ -209,13 +248,13 @@ char* readGraph(char* space, char* subject, char* predicate, char* object){
 	//Serial.println("********************************** 1");
 	searchPath(root, 0, true, folder, subject, predicate, object, space);
 	//Serial.println("********************************** 2");
-	Serial.println("");
-	Serial.print("selectedPath: ");
-	Serial.println(selectedPath);
-	Serial.print("uriGraph: ");
-	Serial.println(uriGraph);
-	Serial.print("Graph: ");
-	Serial.println(graph);
+	//Serial.println("");
+	//Serial.print("selectedPath: ");
+	//Serial.println(selectedPath);
+	//Serial.print("uriGraph: ");
+	//Serial.println(uriGraph);
+	//Serial.print("Graph: ");
+	//Serial.println(graph);
 
 	root.close();
 	
@@ -412,5 +451,19 @@ void createGraph(char* strGraph, EthernetClient client){
 			index = 0;
 		}
 	}
+}
 
+
+//Separating uriGraph
+void sepUriGraph(char* uri_Graph, char* macPart, char* pathPart){
+	int divided = 0;
+	int indexPath = 0;
+	int indexMac = 0;
+	for(int i=0; i<strlen(uri_Graph); i++){
+		if (divided){
+			pathPart[indexPath++] = uri_Graph[i];
+		}else if (uri_Graph[i] != '/') {
+			macPart[indexMac++] = uri_Graph[i];
+		}else divided = 1;
+	}
 }

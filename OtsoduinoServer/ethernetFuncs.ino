@@ -35,6 +35,7 @@ void httpServer(){
 	char urlSubject[64];
 	char urlPredicate[64];
 	char urlObject[64];
+	char urlGraph[64];
 	
 	int indexBuffer = 0;
 	boolean isGraphVar = true;
@@ -173,9 +174,13 @@ void httpServer(){
 
 			if(strcmp(identifyGet, "110")==0){
 				client.println("110 dentro");
-				client.println(urldecode(bufferSpaceVar));
+				
+				memset(urlSpace, '\0', 64);
+				strcpy(urlSpace,urldecode(bufferSpaceVar));
+				memset(urlGraph, '\0', 64);
+				strcpy(urlGraph,urldecode(bufferGraphVar));
+				createGraph(readGraph(urlSpace, urlGraph), client);
 
-				client.println(readGraph(urldecode(bufferSpaceVar),"1107"));
 			}
 			if(strcmp(identifyGet, "101")==0){
 				client.println("101 dentro");
@@ -282,4 +287,17 @@ int isUrl(char* term){
 		return 1;
 	}
 	else return 0;
+}
+
+void getMac(byte* macAddress){
+	memset(macIdentifier, '\0', 15);
+	String sMac = "";
+	sMac = sMac + String(mac[0],HEX);
+	sMac = sMac + String(mac[1],HEX);
+	sMac = sMac + String(mac[2],HEX);
+	sMac = sMac + String(mac[3],HEX);
+	sMac = sMac + String(mac[4],HEX);
+	sMac = sMac + String(mac[5],HEX);
+	sMac.toCharArray(macIdentifier, 15);
+
 }

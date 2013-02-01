@@ -16,7 +16,7 @@ char* myIP = "http://192.168.59.177/";
 // (port 80 is default for HTTP):
 EthernetServer server(80);
 
-File spacesFile;
+File spacesFile;							  //File to save the relations between spaces' uris and folders
 
 unsigned long startTime;                      //Momento en el que inicia el programa
 unsigned long timesCounter = 0;               //Número de veces que se ha ejecutado el Write para cálcular cuando se tiene que ejecutar de nuevo
@@ -36,7 +36,8 @@ unsigned int indexGraph = 0;				  //Se guarda el índice de los grafos (1000, 10
 boolean selectedDirectory = false;
 char selectedPath[64];
 char uriGraph[64];
-char graph[2500];
+char graph[2500];							  //Grafo que se devuelve en los read
+char macIdentifier[15];						  //Variable to save the MAC to create de graph's uris
 
 //CONSTANTS
 char* uriSpaceConst1	= "http://otsopack1";
@@ -66,10 +67,12 @@ void setup()
     Serial.println("initialization failed!");
   }
 
+  getMac(mac);
+
   // start the Ethernet connection and the server:
   Ethernet.begin(mac, ip);
   server.begin();
-  //readGraph(uriSpaceConst1,"1107");
+  readGraph(uriSpaceConst1,"90a2da079c1/8/1103");
   //readGraph(uriSpaceConst1, subjectConst2, predicateConst2, objectConst2);
   startTime = millis();
   Serial.print("millis(): ");
