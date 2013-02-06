@@ -54,7 +54,7 @@ void httpServer(){
 		if (client.available()) {
 		char c = client.read();
 		//client.print(c);
-		Serial.print(c);
+		//Serial.print(c);
 		// if you've gotten to the end of the line (received a newline
 		// character) and the line is blank, the http request has ended,
 		// so you can send a reply

@@ -83,6 +83,7 @@ void setup()
 
 void loop()
 {
+	
 	/*if (millis()/1000>(startTime/1000+(interval*timesCounter))){
 		timesCounter++;
 		Serial.println("hola");

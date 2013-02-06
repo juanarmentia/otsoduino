@@ -222,6 +222,7 @@ char* readGraph(char* spaceUri, char* graphUri){
 char* readGraph(char* space, char* subject, char* predicate, char* object){
     
 	Serial.println("Dentro del read by triple");
+
 	//Hay que recorrer todos los ficheros y carpetas en busca del patrón s,p,o. Cuando se encuentre, se devolverá un String
 	//con todas las líneas del fichero en el que se encuentra el patrón concatenadas (String = "uri|s;p;o|s;p;o|s;p;o");
  
