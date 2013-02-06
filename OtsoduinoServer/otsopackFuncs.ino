@@ -135,7 +135,8 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
 // FUNCIÓN   READGRAPH(SPACE, GRAPH) 
 //***********************************************************************************************
 char* readGraph(char* spaceUri, char* graphUri){
-  
+    
+	Serial.println("Dentro del read by graph");
 	//Hay que recorrer todos los ficheros y carpetas en busca del patrón s,p,o. Cuando se encuentre, se devolverá un String
 	//con todas las líneas del fichero en el que se encuentra el patrón concatenadas (String = "uri|s;p;o|s;p;o|s;p;o");
  
@@ -163,9 +164,10 @@ char* readGraph(char* spaceUri, char* graphUri){
 	sepUriGraph(graphUri, part1Mac, part2Path);
 	//Serial.println(part1Mac);
 	//Serial.println(part2Path);
+	//Serial.println(macIdentifier);
 
 	if (strcmp(part1Mac, macIdentifier)!=0){
-		Serial.println("no coincide");
+		//Serial.println("no coincide");
 		return NULL;
 	}
 
@@ -218,7 +220,8 @@ char* readGraph(char* spaceUri, char* graphUri){
 // FUNCIÓN   READGRAPH(SPACE, SUBJECT, PREDICATE, OBJECT)::Devuelve URI de un grafo que contiene ésta tripleta
 //***********************************************************************************************
 char* readGraph(char* space, char* subject, char* predicate, char* object){
-  
+    
+	Serial.println("Dentro del read by triple");
 	//Hay que recorrer todos los ficheros y carpetas en busca del patrón s,p,o. Cuando se encuentre, se devolverá un String
 	//con todas las líneas del fichero en el que se encuentra el patrón concatenadas (String = "uri|s;p;o|s;p;o|s;p;o");
  

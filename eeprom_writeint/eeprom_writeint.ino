@@ -10,7 +10,7 @@
 
 // the current address in the EEPROM (i.e. which byte
 // we're going to write to next)
-int address = 0;
+int address = 5;
 unsigned int indexSpace = 1000; //18/01/2012 00h00m00s
 
 void setup()

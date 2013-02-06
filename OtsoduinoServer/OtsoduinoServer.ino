@@ -72,11 +72,13 @@ void setup()
   // start the Ethernet connection and the server:
   Ethernet.begin(mac, ip);
   server.begin();
-  readGraph(uriSpaceConst1,"90a2da079c1/8/1103");
+  //readGraph(uriSpaceConst1,"90a2da079c1/8/1103");
   //readGraph(uriSpaceConst1, subjectConst2, predicateConst2, objectConst2);
   startTime = millis();
   Serial.print("millis(): ");
   Serial.println(startTime);
+
+
 }
 
 void loop()

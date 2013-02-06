@@ -1,4 +1,5 @@
 void httpServer(){
+	//Serial.println("listen for incoming clients");
 	// listen for incoming clients
 	EthernetClient client = server.available();
 	char url[128];
@@ -22,8 +23,8 @@ void httpServer(){
 	memset(bufferWildcards, '\0', 15);
 	char bufferSpaceVar[64];
 	memset(bufferSpaceVar, '\0', 64);
-	char bufferGraphVar[15];
-	memset(bufferGraphVar, '\0', 15);
+	char bufferGraphVar[64];
+	memset(bufferGraphVar, '\0', 64);
 	char bufferSubjectVar[64];
 	memset(bufferSubjectVar, '\0', 64);
 	char bufferPredicateVar[64];
@@ -39,7 +40,12 @@ void httpServer(){
 	
 	int indexBuffer = 0;
 	boolean isGraphVar = true;
-	char* identifyGet = "000";
+	char identifyGet[5];
+	memset(identifyGet, '\0', 5);
+	identifyGet[0] = '0';
+	identifyGet[1] = '0';
+	identifyGet[2] = '0';
+	int firstChar = 1;
 
 	if (client) {
 	// an http request ends with a blank line
@@ -73,18 +79,26 @@ void httpServer(){
 		if (c == '\n' && currentLineIsBlank) {
 			
 			url[i-1]='\0';
-			client.print("*");
-			client.print(url);
-			client.println("*");
-			client.println(strlen(url));
+			//client.print("*");
+			//client.print(url);
+			//client.println("*");
+			//client.println(strlen(url));
+			//Serial.println(url);
+			strcpy(identifyGet,"000");
+			Serial.print("indetifyGet: ");
+			Serial.println(identifyGet);
 			for(int j=0; j < strlen(url); j++){
 
 				if (url[j] == '/'){
 					contSep++;
 					indexBuffer = 0;
+
 				}
 				if (url[j] != '/'){
-
+					//Serial.print("contSep: ");
+					//Serial.println(contSep);
+					//Serial.print("indetifyGet_in: ");
+					//Serial.println(identifyGet);
 					switch (contSep)
 					{
 						case 1:{ //"spaces"
@@ -100,7 +114,7 @@ void httpServer(){
 						}break;
 						case 4:{ //graphNumber or "wildcards"
 							if (isGraphVar){
-								if (url[j] == 'w' || url[j] == 'W'){
+								if ((url[j] == 'w' || url[j] == 'W')&&(firstChar)){
 									isGraphVar = false;
 									bufferWildcards[indexBuffer++] = url[j];
 									identifyGet[2] = '1';
@@ -108,6 +122,7 @@ void httpServer(){
 								else{
 									bufferGraphVar[indexBuffer++] = url[j];
 									identifyGet[1] = '1';
+									firstChar = 0;
 								}
 							}
 							else
@@ -137,7 +152,7 @@ void httpServer(){
 			// send a standard http response header
 			//client.println("HTTP/1.1 200 OK");
 			//client.println("Content-Type: text/html");
-			client.print("url: ");
+			/*client.print("url: ");
 			client.println(url);
 			//client.println("<br />");
 			client.print("bufferSpace: ");
@@ -165,15 +180,16 @@ void httpServer(){
 				client.print("bufferObjectsVar: ");
 			    client.println(bufferObjectVar);
 				//client.println("<br />");
-			}
+			}*/
 
 			contSep = 0;
 			isGraphVar = true;
 
-			client.println(identifyGet);
+			//client.println(identifyGet);
+			Serial.println(identifyGet);
 
 			if(strcmp(identifyGet, "110")==0){
-				client.println("110 dentro");
+				//client.println("110 dentro");
 				
 				memset(urlSpace, '\0', 64);
 				strcpy(urlSpace,urldecode(bufferSpaceVar));
@@ -183,7 +199,7 @@ void httpServer(){
 
 			}
 			if(strcmp(identifyGet, "101")==0){
-				client.println("101 dentro");
+				//client.println("101 dentro");
 
 				memset(urlSpace, '\0', 64);
 				strcpy(urlSpace,urldecode(bufferSpaceVar));
@@ -222,8 +238,12 @@ void httpServer(){
 	}
 	// give the web browser time to receive the data
 	delay(1);
+	Serial.println("closing the connection");
 	// close the connection:
 	client.stop();
+	Serial.println("Connection closed");
+	Serial.println("*****************");
+	Serial.println("");
 	}
 }
 
