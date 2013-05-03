@@ -4,86 +4,102 @@
 #include <SD.h>
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
+#include <MemoryFree.h>
+#include <avr/wdt.h>
 
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
-byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x79, 0xC1 };
-IPAddress ip(192,168,59, 177);
-char* myIP = "http://192.168.59.177/";
+byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x87, 0xF3 };
+IPAddress ip(192,168,59, 177);          // SmartLab
+//IPAddress ip(192,168,1, 177);           // Home
+char* myIP = "http://192.168.59.177/";  // SmartLab
+//char* myIP = "http://192.168.1.177/";   // Home
 
 // Initialize the Ethernet server library
 // with the IP address and port you want to use 
 // (port 80 is default for HTTP):
 EthernetServer server(80);
 
-File spacesFile;							  //File to save the relations between spaces' uris and folders
+File spacesFile;			      //File to save the relations between spaces' uris and folders
 
 unsigned long startTime;                      //Momento en el que inicia el programa
-unsigned long timesCounter = 0;               //Número de veces que se ha ejecutado el Write para cálcular cuando se tiene que ejecutar de nuevo
-unsigned int interval = 30000;                 //Intervalo de tiempo para que se ejecute el write
+unsigned long timesCounter = 0;               //Numero de veces que se ha ejecutado el Write para calcular cuando se tiene que ejecutar de nuevo
+int interval = 30000;                     //Intervalo de tiempo para que se ejecute el write
 boolean firstWrite = true;                    //Para controlar si es la primera tripleta de un grafo o son las siguientes las que se escriben
-char URL_part2[30];							  //Segunda parte de la uri del grafo --> (1000.txt, 1001.txt ...)
+char URL_part2[30];			      //Segunda parte de la uri del grafo --> (1000.txt, 1001.txt ...)
 
-boolean firstFile = true;					  //Boolean para controlar los accesos a los diferentes directorios en la función searchDirectory, de la función readGraph()
-char directory[30];							  //Variable que se utiliza para almacenar ruta del archivo que se está leyendo en la función searchPath, de la función readGraph()
-char directorySpace[30];							  //Variable que se utiliza para almacenar la ruta del espacio que se está leyendo en la función searchPath, de la función readGraph()
+boolean firstFile = true;	              //Boolean para controlar los accesos a los diferentes directorios en la funcion searchDirectory, de la funcion readGraph()
+char directory[30];			      //Variable que se utiliza para almacenar ruta del archivo que se esta leyendo en la funcion searchPath, de la funcion readGraph()
+char directorySpace[30];		      //Variable que se utiliza para almacenar la ruta del espacio que se esta leyendo en la funcion searchPath, de la funcion readGraph()
 
-char c;                                       //Carácter en el que se almacena el carácter leído de fichero
-unsigned int indexSpace = 0;				  //Se guarda el índice del espacio para guardar en spaces.txt (space1000, space1001...)
-unsigned int indexGraph = 0;				  //Se guarda el índice de los grafos (1000, 1001...)
+char c;                                       //Caracter en el que se almacena el caracter leido de fichero
+int indexSpace = 0;		              //Se guarda el indice del espacio para guardar en spaces.txt (space1000, space1001...)
+int indexGraph = 0;		              //Se guarda el indice de los grafos (1000, 1001...)
 
 
 boolean selectedDirectory = false;
 char selectedPath[64];
 char uriGraph[64];
-char graph[2500];							  //Grafo que se devuelve en los read
-char macIdentifier[15];						  //Variable to save the MAC to create de graph's uris
+char graph[2000];			      //Grafo que se devuelve en los read  (Se queda corto de memoria)
+//char graphBySpace[2000];		      //Grafo que se crea en el printDirectorySpace
+char macIdentifier[15];			      //Variable to save the MAC to create de graph's uris
+char subj[80];
+char pred[80];
+char obj[80];
 
 //CONSTANTS
-char* uriSpaceConst1	= "http://otsopack1";
-char* subjectConst1		= "subject1";
-char* predicateConst1	= "predicate1";
-char* objectConst1		= "object1";
-char* uriSpaceConst2	= "http://otsopack2";
-char* subjectConst2		= "subject2";
-char* predicateConst2	= "predicate2";
-char* objectConst2		= "object2";
-char* spacesIndexConst	= "SPACES.TXT";
-char* nothingConst		= "nothing";
-char* extConst			= ".txt";
-char* sepConst			= "|";
-char* sepUrlConst		= "/";
-char* pointConst		= ".";
-char* nullConst			= "\0";
+char* uriSpaceConst1   	= "http://otsopack1";
+char* subjectConst1    	= "subject1";
+char* predicateConst1  	= "predicate1";
+char* objectConst1     	= "object1";
+char* uriSpaceConst2   	= "http://otsopack2";
+char* subjectConst2    	= "subject2";
+char* predicateConst2  	= "predicate2";
+char* objectConst2     	= "object2";
+char* spacesIndexConst  = "SPACES.TXT";
+char* nothingConst     	= "nothing";
+char* extConst         	= ".txt";
+char* sepConst	     	= "|";
+char* sepUrlConst	= "/";
+char* pointConst	= ".";
+char* nullConst        	= "\0";
 
+int freeMem;
 
 void setup()
 {
-  delay(2000);
+  //wdt_disable(); 
+  //delay(2000);
   Serial.begin(115200);
-
-  pinMode(4, OUTPUT);
+  pinMode(53, OUTPUT);
   while (!SD.begin(4)) {
     Serial.println("initialization failed!");
   }
 
   getMac(mac);
-
   // start the Ethernet connection and the server:
   Ethernet.begin(mac, ip);
   server.begin();
+  //readGraph(uriSpaceConst1);
   //readGraph(uriSpaceConst1,"90a2da079c1/8/1103");
   //readGraph(uriSpaceConst1, subjectConst2, predicateConst2, objectConst2);
   startTime = millis();
-  Serial.print("millis(): ");
-  Serial.println(startTime);
+  //Serial.print("millis(): ");
+  //Serial.println(startTime);
 
-
+  freeMem = freeMemory();
+  Serial.print("freeMemory()=");
+  Serial.println(freeMem);
+  //wdt_enable(WDTO_4S);
 }
 
 void loop()
 {
-	
+        //wdt_reset();	
+        freeMem = freeMemory();
+        if(freeMem != freeMemory()){        
+          Serial.print("freeMemory()=");
+        }
 	/*if (millis()/1000>(startTime/1000+(interval*timesCounter))){
 		timesCounter++;
 		Serial.println("hola");
@@ -140,4 +156,7 @@ void loop()
 //	}
 //	Serial.println("-------------------------------------");
 //}
+
+
+
 

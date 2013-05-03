@@ -5,9 +5,9 @@ void httpServer(){
 	char url[128];
 	memset(url, '\0', 128);
 	
-	char* get = "GET ";
-	char* space = "/spaces/";
-	char* graph = "/graph/";
+	char* getString = "GET ";
+	char* spaceString = "/spaces/";
+	char* graphString = "/graph/";
 
 	int option = 0;
 	int i=0;
@@ -15,7 +15,9 @@ void httpServer(){
 	int contBlanks = 0;
 	int contSep = 0;
 	
-	char bufferSpace[15];
+	char bufferHttpRequest[15];
+	memset(bufferHttpRequest, '\0', 15);
+        char bufferSpace[15];
 	memset(bufferSpace, '\0', 15);
 	char bufferGraph[15];
 	memset(bufferGraph, '\0', 15);
@@ -63,8 +65,8 @@ void httpServer(){
 			url[i] = c;
 			i++;
 		}
-		
-		if (c == ' ' && contBlanks < 2) {
+	        	
+                if (c == ' ' && contBlanks < 2) {
 			contBlanks++;
 			if (urlArrived == true) {
 				urlArrived =false;
@@ -72,12 +74,11 @@ void httpServer(){
 			else urlArrived = true;
 		}
 		
-		
-		
-		
-
+                if (contBlanks == 0){
+                    bufferHttpRequest[indexBuffer++] = c;     
+                }
+                
 		if (c == '\n' && currentLineIsBlank) {
-			
 			url[i-1]='\0';
 			//client.print("*");
 			//client.print(url);
@@ -85,8 +86,8 @@ void httpServer(){
 			//client.println(strlen(url));
 			//Serial.println(url);
 			strcpy(identifyGet,"000");
-			Serial.print("indetifyGet: ");
-			Serial.println(identifyGet);
+			//Serial.print("indetifyGet: ");
+			//Serial.println(identifyGet);
 			for(int j=0; j < strlen(url); j++){
 
 				if (url[j] == '/'){
@@ -147,58 +148,57 @@ void httpServer(){
 				}
 			}
  
-			//Aquí hay que enviar lo que recibamos en el readGraph(). Tratar el string y enviarlo
-          
-			// send a standard http response header
-			//client.println("HTTP/1.1 200 OK");
-			//client.println("Content-Type: text/html");
-			/*client.print("url: ");
-			client.println(url);
-			//client.println("<br />");
-			client.print("bufferSpace: ");
-			client.println(bufferSpace);
-			//client.println("<br />");
-			client.print("bufferSpaceVar: ");
-			client.println(bufferSpaceVar);
-			//client.println("<br />");
-			client.print("bufferGraph: ");
-			client.println(bufferGraph);
-			//client.println("<br />");
-			client.print("bufferGraphVar: ");
-			client.println(bufferGraphVar);
-
-			if (contSep>4){
-				client.print("bufferWildcards: ");
-				client.println(bufferWildcards);
-				//client.println("<br />");
-				client.print("bufferSubjectVar: ");
-			    client.println(bufferSubjectVar);
-				//client.println("<br />");
-				client.print("bufferPredicateVar: ");
-			    client.println(bufferPredicateVar);
-				//client.println("<br />");
-				client.print("bufferObjectsVar: ");
-			    client.println(bufferObjectVar);
-				//client.println("<br />");
-			}*/
 
 			contSep = 0;
 			isGraphVar = true;
-
+                        //Serial.println(strcmp(bufferHttpRequest,"GET"));
 			//client.println(identifyGet);
-			Serial.println(identifyGet);
+                        if (strcmp(url, "/favicon.ico") != 0){
+                          //Serial.println(identifyGet);
+                        }
+                        
+                        //memset(bufferHttpRequest, '\0', 15);
+                        //strcpy(bufferHttpRequest, "DELETE");
+                        
+			//Read by space
+                        if ( (strcmp(identifyGet, "100") == 0) && (strcmp(bufferHttpRequest,"GET") == 0) ){
+				//client.println("100 dentro");
+				memset(urlSpace, '\0', 64);
+				strcpy(urlSpace,urldecode(bufferSpaceVar));
+				if (readGraph(urlSpace) != NULL){
+                                    //FUNCION QUE SEPARA LOS GRAFOS DEL STRING CREADO EN READGRAPH()
+				    //client.println("probando");
+                                    //client.println(graph);
+                                    separateGraph(graph, client);	 
+                                }else{
+                                    //ERROR 404
+                                    client.println("ERROR 404");
+				}
 
-			if(strcmp(identifyGet, "110")==0){
+			}
+
+                        //Read by graph
+			if ( (strcmp(identifyGet, "110") == 0) && (strcmp(bufferHttpRequest,"GET") == 0) ){
 				//client.println("110 dentro");
 				
 				memset(urlSpace, '\0', 64);
 				strcpy(urlSpace,urldecode(bufferSpaceVar));
 				memset(urlGraph, '\0', 64);
 				strcpy(urlGraph,urldecode(bufferGraphVar));
-				createGraph(readGraph(urlSpace, urlGraph), client);
+                                //client.println(urlSpace);
+                                //client.println(urlGraph);
+				if (readGraph(urlSpace, urlGraph) != NULL){
+					//FUNCION QUE CREA EL GRAFO DEL STRING RECIBIDO EN READGRAPH()
+					createGraph(graph, client);
+				}else{
+					//ERROR 404
+                                        client.println("ERROR 404");
+				}
 
 			}
-			if(strcmp(identifyGet, "101")==0){
+
+                        //Read by Triple
+			if ( (strcmp(identifyGet, "101") == 0) && (strcmp(bufferHttpRequest,"GET") == 0) ){
 				//client.println("101 dentro");
 
 				memset(urlSpace, '\0', 64);
@@ -209,8 +209,58 @@ void httpServer(){
 				strcpy(urlPredicate,urldecode(bufferPredicateVar));
 				memset(urlObject, '\0', 64);
 				strcpy(urlObject,urldecode(bufferObjectVar));
-				createGraph(readGraph(urlSpace, urlSubject, urlPredicate, urlObject), client);
-				//FUNCIÓN QUE CREA EL GRAFO DEL STRING RECIBIDO EN READGRAPH()
+				if (readGraph(urlSpace, urlSubject, urlPredicate, urlObject) != NULL){
+					//FUNCION QUE CREA EL GRAFO DEL STRING RECIBIDO EN READGRAPH()
+					createGraph(graph, client); 
+                                        
+				}else{
+					//ERROR 404
+                                        client.println("ERROR 404");
+				}
+				
+			}
+
+                        //Delete by graph
+			if ( (strcmp(identifyGet, "110") == 0) && (strcmp(bufferHttpRequest,"DELETE") == 0) ){
+				//client.println("110 dentro");
+				
+				memset(urlSpace, '\0', 64);
+				strcpy(urlSpace,urldecode(bufferSpaceVar));
+				memset(urlGraph, '\0', 64);
+				strcpy(urlGraph,urldecode(bufferGraphVar));
+                                //client.println(urlSpace);
+                                //client.println(urlGraph);
+				if (deleteGraph(urlSpace, urlGraph)){
+					//FUNCION QUE CREA EL GRAFO DEL STRING RECIBIDO EN DELETEGRAPH()
+					createGraph(graph, client);
+                                            
+				}else{
+					//ERROR 404
+                                        client.println("ERROR 404");
+				}
+
+			}
+
+                        //Delete by Triple
+			if ( (strcmp(identifyGet, "101") == 0) && (strcmp(bufferHttpRequest,"DELETE") == 0) ){
+				//client.println("101 dentro");
+                                Serial.println("dentro de 101");
+				memset(urlSpace, '\0', 64);
+				strcpy(urlSpace,urldecode(bufferSpaceVar));
+				memset(urlSubject, '\0', 64);
+				strcpy(urlSubject,urldecode(bufferSubjectVar));
+				memset(urlPredicate, '\0', 64);
+				strcpy(urlPredicate,urldecode(bufferPredicateVar));
+				memset(urlObject, '\0', 64);
+				strcpy(urlObject,urldecode(bufferObjectVar));
+				if (deleteGraph(urlSpace, urlSubject, urlPredicate, urlObject)){
+					//FUNCION QUE CREA EL GRAFO DEL STRING RECIBIDO EN DELETEGRAPH()
+					createGraph(graph, client);      
+				}else{
+					//ERROR 404
+                                        client.println("ERROR 404");
+				}
+				
 			}
 
 			break;
@@ -238,12 +288,17 @@ void httpServer(){
 	}
 	// give the web browser time to receive the data
 	delay(1);
-	Serial.println("closing the connection");
+        if (strcmp(url, "/favicon.ico") != 0){
+              //Serial.println("closing the connection");
+        }
 	// close the connection:
 	client.stop();
-	Serial.println("Connection closed");
-	Serial.println("*****************");
-	Serial.println("");
+        if (strcmp(url, "/favicon.ico") != 0){
+              //Serial.println("Connection closed");
+	      //Serial.println("*****************");
+	      //Serial.println("");
+        }
+	
 	}
 }
 
@@ -321,3 +376,4 @@ void getMac(byte* macAddress){
 	sMac.toCharArray(macIdentifier, 15);
 
 }
+

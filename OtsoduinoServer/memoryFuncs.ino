@@ -34,8 +34,8 @@ void EEPROM_writelong(int address, unsigned long value) {
 /**
   write an integer into EEPROM
 **/
-unsigned int EEPROM_readint(int address) {
-  unsigned int word = word(EEPROM.read(address), EEPROM.read(address+1));
+int EEPROM_readint(int address) {
+  int word = word(EEPROM.read(address), EEPROM.read(address+1));
   return word;
 } 
 
@@ -85,3 +85,5 @@ void prinFromMemoryToFile(char *str, File file)
 //  while (pgm_read_byte(mem) != 0x00) /* Comparamos con \0, un terminador */
 //    msgTwitter.concat(pgm_read_byte(mem++));
 //}
+
+
