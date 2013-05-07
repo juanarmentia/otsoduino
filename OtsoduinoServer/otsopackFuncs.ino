@@ -4,8 +4,8 @@
 char* writeTriple(char* space, char* subject, char* predicate, char* object, boolean firstTriple){
   
 	File graphFile;
-	/*Serial.print("1. Dentro de writeTriple: ");
-	Serial.println(indexSpace);*/
+	//Serial.print("1. Dentro de writeTriple: ");
+	//Serial.println(indexSpace);
 	char spaceUri[64];    //URI del espacio
 	memset(spaceUri, '\0', 64);      
 	char spaceFolder[30];    //Nombre de la carpeta correspondiente al espacio
@@ -15,37 +15,43 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
 	//Se empiela a leer spaces.txt para ver si existe el espacio
 	graphFile = SD.open(spacesIndexConst); //No utilizar nombres largos de fichero (formato 8.3)
 	strcpy(spaceUri, readSpaceUri(graphFile));
-	/*Serial.print("1.5. spaceUri: ");
-	Serial.print(spaceUri);
-	Serial.print("|");
-	Serial.println(space);*/
+	//Serial.print("1.5. spaceUri: ");
+	//Serial.print(spaceUri);
+	//Serial.print("|");
+	//Serial.println(space);
   
 	//Si la URI leida en el fichero no es la misma que hemos pasado a la funcion o el fichero no esta vacio, se sigue leyendo.
 	while((strcmp(spaceUri, space)!=0)&&(strcmp(spaceUri, nothingConst)!=0)){
-		while (c != '\n'){
+		//Serial.println("dentro");
+                c = graphFile.read();
+                while ((c != '\n') && (c != '\r')){
 			c = graphFile.read();
+                        //Serial.println(c);
 		}
 		memset(spaceUri, '\0', 64);
 		strcpy(spaceUri, readSpaceUri(graphFile));
-		/*Serial.print("1.75. spaceUri: ");
-		Serial.println(spaceUri);*/
+		//Serial.print("1.75. spaceUri: ");
+		//Serial.println(spaceUri);
+                //Serial.println(strcmp(spaceUri, space));
+                //Serial.println(strcmp(spaceUri, nothingConst));
 	}
 
 	//Si ha salido del while anterior y el fichero no esta vacio, es que el espacio que se ha pasado a la funcion existe en el fichero y leemos el nombre de su carpeta asociada.
 	if (strcmp(spaceUri, nothingConst)!=0){
 		//Leer la parte del nombre de la carpeta
 		memset(spaceFolder, '\0', 30);
+                //Serial.print("2. spaceFolder: ");
 		strcpy(spaceFolder, readSpaceFolder(graphFile));
-		/*Serial.print("2. spaceFolder: ");
-		Serial.println(spaceFolder);*/
+		
+		//Serial.println(spaceFolder);
 	}
 	graphFile.close();
   
-	/*Serial.print("3. spaceUri(Nothing): ");
-	Serial.println(spaceUri);*/
+	//Serial.print("3. spaceUri(Nothing): ");
+	//Serial.println(spaceUri);
 	//Si no se ha encontrado el espacio en el fichero, se introduce en el spaces.txt y se crea una carpeta
 	if (strcmp(spaceUri, nothingConst)==0){ 
-		/*Serial.println("4. spaceUri es 'nothing'");*/
+		//Serial.println("4. spaceUri es 'nothing'");
 		spacesFile = SD.open(spacesIndexConst, FILE_WRITE);
 		if (spacesFile) { 
 			spacesFile.print(space);
@@ -59,11 +65,11 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
     	memset(spaceFolder, '\0', 30);
 		//Serial.print(spaceFolder);
 		itoa(indexSpace, spaceFolder, 10);
-		/*Serial.print("5. spaceFolder: ");
-		Serial.println(spaceFolder);*/
+		//Serial.print("5. spaceFolder: ");
+		//Serial.println(spaceFolder);
 		SD.mkdir(spaceFolder);
-		/*Serial.print("Creating spaceFolder: ");
-		Serial.println(spaceFolder);*/
+		//Serial.print("Creating spaceFolder: ");
+		//Serial.println(spaceFolder);
 		indexSpace++;
 		EEPROM_writeint(0, indexSpace);
 	}
@@ -96,7 +102,7 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
 	delay(300);
   
 	// open a new file and immediately close it:
-	/*Serial.print("7. Creating ");*/
+	//Serial.print("7. Creating ");
 	delay(3000);
 	char uriGraphcpy[64];
 	memset(uriGraphcpy, '\0', 64);
@@ -108,7 +114,7 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
 		pch = strtok (NULL, "\n");
 		strcat(uriGraphcpy, pch);
 	}
-	/*Serial.println(uriGraphcpy);*/
+	//Serial.println(uriGraphcpy);
 	graphFile = SD.open(uriGraphcpy, FILE_WRITE); //No utilizar nombres largos de fichero
 	if (graphFile){
 		graphFile.print(subject);
@@ -122,6 +128,8 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
 
 	char uriGraphReturn[64];
 	memset(uriGraphReturn, '\0', 64);
+        strcat(uriGraphReturn, macIdentifier);
+        strcat(uriGraphReturn, sepUrlConst);
 	strcat(uriGraphReturn, space);
 	strcat(uriGraphReturn, sepUrlConst);
 	strcat(uriGraphReturn, strtok(uriGraphcpy, ".")); 
@@ -151,7 +159,7 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
         memset(graph, '\0', 2000);
 
 	//Se abre el fichero SPACES.TXT donde se encuentra la relaciÃ³n de espacios con nÃºmero de carpeta
-	File fileSpaces = SD.open("SPACES.TXT");
+	File fileSpaces = SD.open(spacesIndexConst);
         //Serial.println(fileSpaces);
         if (fileSpaces == 0){
             return NULL;
@@ -170,7 +178,9 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
         char folder[30];
 	memset(folder, '\0', 30);
 	strcpy(folder, readSpaceFolder(fileSpaces));
-        folder[strlen(folder)-1] = '\0';
+        //Serial.println(folder);
+        //Serial.println(strlen(folder));
+        //folder[strlen(folder)-1] = '\0';
         fileSpaces.close();	
         //Serial.print("Folder: ");
 	//Serial.println(folder);
@@ -180,6 +190,8 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
 	strcpy(rootPath, sepUrlConst);
         strcat(rootPath, folder);
         strcat(rootPath, sepUrlConst);
+        //Serial.println(rootPath);
+        //Serial.println(strlen(rootPath));
 	File root = SD.open(rootPath);
         //Serial.println(root);
         	
@@ -239,7 +251,7 @@ char* readGraph(char* spaceUri, char* graphUri){
 
 	sepUriGraph(part2Path, spaceNumber, aux);
 	
-	File fileSpaces = SD.open("SPACES.TXT");
+	File fileSpaces = SD.open(spacesIndexConst);
         //Serial.println(fileSpaces);
         if (fileSpaces == 0){
           return NULL;
@@ -254,7 +266,7 @@ char* readGraph(char* spaceUri, char* graphUri){
                         memset(selectedPath, '\0', 64);
                         memset(folder, '\0', 15);
         		strcpy(folder, readSpaceFolder(fileSpaces));
-        		folder[strlen(folder)-1] = '\0';
+        		//folder[strlen(folder)-1] = '\0';
         		if(strcmp(folder,spaceNumber)==0){
         			spaceExist = 1;
                                 exit;
@@ -319,7 +331,7 @@ char* readGraph(char* space, char* subject, char* predicate, char* object){
         memset(graph, '\0', 2000);
 
 	//Se abre el fichero SPACES.TXT donde se encuentra la relacion de espacios con numero de carpeta
-	File fileSpaces = SD.open("SPACES.TXT");
+	File fileSpaces = SD.open(spacesIndexConst);
         if (fileSpaces == 0){
                 return NULL;
         }
@@ -339,7 +351,7 @@ char* readGraph(char* space, char* subject, char* predicate, char* object){
         char folder[30];
 	memset(folder, '\0', 30);
 	strcpy(folder, readSpaceFolder(fileSpaces));
-        folder[strlen(folder)-1] = '\0';
+        //folder[strlen(folder)-1] = '\0';
         fileSpaces.close();
         //Serial.println(folder);
         
@@ -425,7 +437,7 @@ char* deleteGraph(char* spaceUri, char* graphUri){
 
 	sepUriGraph(part2Path, spaceNumber, aux);
 	
-	File fileSpaces = SD.open("SPACES.TXT");
+	File fileSpaces = SD.open(spacesIndexConst);
         //Serial.println(fileSpaces);
         if (fileSpaces == 0){
           return NULL;
@@ -440,7 +452,7 @@ char* deleteGraph(char* spaceUri, char* graphUri){
                         memset(selectedPath, '\0', 64);
                         memset(folder, '\0', 15);
         		strcpy(folder, readSpaceFolder(fileSpaces));
-        		folder[strlen(folder)-1] = '\0';
+        		//folder[strlen(folder)-1] = '\0';
         		if(strcmp(folder,spaceNumber)==0){
         			spaceExist = 1;
                                 exit;
@@ -513,7 +525,7 @@ char* deleteGraph(char* space, char* subject, char* predicate, char* object){
         memset(graph, '\0', 2000);
 
 	//Se abre el fichero SPACES.TXT donde se encuentra la relacion de espacios con numero de carpeta
-	File fileSpaces = SD.open("SPACES.TXT");
+	File fileSpaces = SD.open(spacesIndexConst);
         if (fileSpaces == 0){
                 return false;
         }
@@ -533,7 +545,7 @@ char* deleteGraph(char* space, char* subject, char* predicate, char* object){
         char folder[30];
 	memset(folder, '\0', 30);
 	strcpy(folder, readSpaceFolder(fileSpaces));
-        folder[strlen(folder)-1] = '\0';
+        //folder[strlen(folder)-1] = '\0';
         fileSpaces.close();
         //Serial.println(folder);
         

@@ -120,19 +120,19 @@ char* readSpaceUri(File gFile){
 	char rSpaceUri[64];
 	memset(rSpaceUri, '\0', 64);
 	int index = 0;
-	char c = gFile.read();
+        char c = gFile.read();
 	if (c!=-1){
-		while ((c != '|')){
-			if ((c != '\n')&&(c != '\r')){
-				rSpaceUri[index++] = c;
-			}
-			c = gFile.read();
+	    while ((c != '|') && (c != -1)){
+	        if ((c != '\n')&&(c != '\r')){
+		    rSpaceUri[index++] = c;
 		}
-		delay(200);
+		c = gFile.read();
+	    }
+	    delay(200);
 	}
 	else{
-		//Serial.println("nothing");
-                return "nothing"; 
+	    //Serial.println("nothing");
+            return "nothing"; 
 	}
 	//Serial.print("Termino leido: |");
 	//Serial.print(rSpaceUri);
@@ -147,10 +147,12 @@ char* readSpaceFolder(File gFile){
 	memset(rSpaceFolder, '\0', 64);
 	int index = 0;
 	char c = gFile.read();
-	while ((c != '\n')&&(c != ' ')){
+        //Serial.println(int(c));
+	while ((c != '\n') && (c != '\r') && (c != ' ') && (c != -1)){
 		rSpaceFolder[index++] = c;
 		delay(200);
 		c = gFile.read();
+                //Serial.println(int(c));
 	}
 	//Serial.print("readSpaceFolder(): ");
 	//Serial.println(rSpaceFolder);
