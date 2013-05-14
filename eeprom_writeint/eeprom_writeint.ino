@@ -10,12 +10,16 @@
 
 // the current address in the EEPROM (i.e. which byte
 // we're going to write to next)
-int address = 5;
-unsigned int indexSpace = 1000; //18/01/2012 00h00m00s
+int addressGraph = 5;
+int addressSpace = 0;
+unsigned int indexGraph = 2000; 
+unsigned int indexSpace = 10; 
 
 void setup()
 {
-  EEPROM_writeint(address, indexSpace);
+  EEPROM_writeint(addressGraph, indexGraph);
+  delay(1000);
+  EEPROM_writeint(addressSpace, indexSpace);
 }
 
 void loop()
