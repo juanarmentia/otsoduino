@@ -167,12 +167,17 @@ void httpServer(){
 				strcpy(urlSpace,urldecode(bufferSpaceVar));
 				if (readGraph(urlSpace) != NULL){
                                     //FUNCION QUE SEPARA LOS GRAFOS DEL STRING CREADO EN READGRAPH()
-				    //client.println("probando");
-                                    //client.println(graph);
-                                    separateGraph(graph, client);	 
+                                        client.println("HTTP/1.1 200 OK");
+                                        client.println("Server: Arduino Mega 2560");
+                                        client.println("Content-Type: text/plain; charset=US-ASCII");
+                                        client.println("Connection: close");
+                                        client.println();
+                                        separateGraph(graph, client);	 
                                 }else{
                                     //ERROR 404
-                                    client.println("ERROR 404");
+                                        client.println("HTTP/1.1 404 Not Found");
+                                        client.println("Content-Type: text/plain");
+                                        client.println();
 				}
 
 			}
@@ -189,10 +194,17 @@ void httpServer(){
                                 //client.println(urlGraph);
 				if (readGraph(urlSpace, urlGraph) != NULL){
 					//FUNCION QUE CREA EL GRAFO DEL STRING RECIBIDO EN READGRAPH()
-					createGraph(graph, client);
+					client.println("HTTP/1.1 200 OK");
+                                        client.println("Server: Arduino Mega 2560");
+                                        client.println("Content-Type: text/plain; charset=US-ASCII");
+                                        client.println("Connection: close");
+                                        client.println();
+                                        createGraph(graph, client);
 				}else{
 					//ERROR 404
-                                        client.println("ERROR 404");
+                                        client.println("HTTP/1.1 404 Not Found");
+                                        client.println("Content-Type: text/plain");
+                                        client.println();
 				}
 
 			}
@@ -211,11 +223,18 @@ void httpServer(){
 				strcpy(urlObject,urldecode(bufferObjectVar));
 				if (readGraph(urlSpace, urlSubject, urlPredicate, urlObject) != NULL){
 					//FUNCION QUE CREA EL GRAFO DEL STRING RECIBIDO EN READGRAPH()
-					createGraph(graph, client); 
+					client.println("HTTP/1.1 200 OK");
+                                        client.println("Server: Arduino Mega 2560");
+                                        client.println("Content-Type: text/plain; charset=US-ASCII");
+                                        client.println("Connection: close");
+                                        client.println();
+                                        createGraph(graph, client); 
                                         
 				}else{
 					//ERROR 404
-                                        client.println("ERROR 404");
+                                        client.println("HTTP/1.1 404 Not Found");
+                                        client.println("Content-Type: text/plain");
+                                        client.println();
 				}
 				
 			}
@@ -232,11 +251,18 @@ void httpServer(){
                                 //client.println(urlGraph);
 				if (deleteGraph(urlSpace, urlGraph)){
 					//FUNCION QUE CREA EL GRAFO DEL STRING RECIBIDO EN DELETEGRAPH()
+                                        client.println("HTTP/1.1 200 OK");
+                                        client.println("Server: Arduino Mega 2560");
+                                        client.println("Content-Type: text/plain; charset=US-ASCII");
+                                        client.println("Connection: close");
+                                        client.println();
 					createGraph(graph, client);
                                             
 				}else{
 					//ERROR 404
-                                        client.println("ERROR 404");
+                                        client.println("HTTP/1.1 404 Not Found");
+                                        client.println("Content-Type: text/plain");
+                                        client.println();
 				}
 
 			}
@@ -255,10 +281,17 @@ void httpServer(){
 				strcpy(urlObject,urldecode(bufferObjectVar));
 				if (deleteGraph(urlSpace, urlSubject, urlPredicate, urlObject)){
 					//FUNCION QUE CREA EL GRAFO DEL STRING RECIBIDO EN DELETEGRAPH()
+                                        client.println("HTTP/1.1 200 OK");
+                                        client.println("Server: Arduino Mega 2560");
+                                        client.println("Content-Type: text/plain; charset=US-ASCII");
+                                        client.println("Connection: close");
+                                        client.println();
 					createGraph(graph, client);      
 				}else{
 					//ERROR 404
-                                        client.println("ERROR 404");
+                                        client.println("HTTP/1.1 404 Not Found");
+                                        client.println("Content-Type: text/plain");
+                                        client.println();
 				}
 				
 			}

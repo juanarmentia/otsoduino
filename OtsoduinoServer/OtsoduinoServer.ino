@@ -24,7 +24,7 @@ File spacesFile;			      //File to save the relations between spaces' uris and f
 
 unsigned long startTime;                      //Momento en el que inicia el programa
 unsigned long timesCounter = 0;               //Numero de veces que se ha ejecutado el Write para calcular cuando se tiene que ejecutar de nuevo
-int interval = 30000;                     //Intervalo de tiempo para que se ejecute el write
+int interval = 30000;                         //Intervalo de tiempo para que se ejecute el write
 boolean firstWrite = true;                    //Para controlar si es la primera tripleta de un grafo o son las siguientes las que se escriben
 char URL_part2[30];			      //Segunda parte de la uri del grafo --> (1000.txt, 1001.txt ...)
 
@@ -36,6 +36,13 @@ char c;                                       //Caracter en el que se almacena e
 int indexSpace = 0;		              //Se guarda el indice del espacio para guardar en spaces.txt (space1000, space1001...)
 int indexGraph = 0;		              //Se guarda el indice de los grafos (1000, 1001...)
 
+int objectType;                               //Tipo de objeto
+                                              //     0: url
+                                              //     1: int 
+                                              //     2: unsigned int
+                                              //     3: double
+                                              //     4: boolean
+                                              //     5: string
 
 boolean selectedDirectory = false;
 char selectedPath[64];
@@ -46,6 +53,7 @@ char macIdentifier[15];			      //Variable to save the MAC to create de graph's 
 char subj[80];
 char pred[80];
 char obj[80];
+char objType[2];
 
 //CONSTANTS
 char* uriSpaceConst1   	= "http://otsopack1";
@@ -56,6 +64,10 @@ char* uriSpaceConst2   	= "http://otsopack2";
 char* subjectConst2    	= "subject2";
 char* predicateConst2  	= "predicate2";
 char* objectConst2     	= "object2";
+char* uriSpaceConst3   	= "http://otsopack3";
+char* subjectConst3    	= "subject3";
+char* predicateConst3  	= "predicate3";
+char* objectConst3     	= "object3";
 char* spacesIndexConst  = "SPACES.TXT";
 char* nothingConst     	= "nothing";
 char* extConst         	= ".txt";
@@ -80,16 +92,29 @@ void setup()
   // start the Ethernet connection and the server:
   Ethernet.begin(mac, ip);
   server.begin();
-  //readGraph(uriSpaceConst1);
-  //readGraph(uriSpaceConst1,"90a2da079c1/8/1103");
-  //readGraph(uriSpaceConst1, subjectConst2, predicateConst2, objectConst2);
-  startTime = millis();
-  //Serial.print("millis(): ");
-  //Serial.println(startTime);
-
+  
   freeMem = freeMemory();
   Serial.print("freeMemory()=");
   Serial.println(freeMem);
+  
+  startTime = millis();
+  delay(1000);
+//  Serial.println(writeTriple(uriSpaceConst1, subjectConst1, predicateConst1, objectConst1, firstWrite));
+//  Serial.println();
+//  delay(1000);
+//  Serial.println(writeTriple(uriSpaceConst1, subjectConst2, predicateConst3, objectConst3, firstWrite));
+//  Serial.println();
+//  firstWrite = true;
+//  delay(1000);
+  
+//  Serial.println("Nueva tripleta");    
+//  Serial.println(writeTriple(uriSpaceConst3, subjectConst2, predicateConst2, objectConst2, 1, firstWrite));
+//  Serial.println();
+//  firstWrite = true;
+//  delay(1000);
+//  Serial.print("millis(): ");
+//  Serial.println(startTime);
+  
   //wdt_enable(WDTO_4S);
 }
 
@@ -103,7 +128,6 @@ void loop()
 	/*if (millis()/1000>(startTime/1000+(interval*timesCounter))){
 		timesCounter++;
 		Serial.println("hola");
-		//Serial.println(readGraph(uriSpaceConst1, subjectConst2, predicateConst2, objectConst2));
 
 		//Serial.println(writeTriple(uriSpaceConst1, subjectConst1, predicateConst1, objectConst1, firstWrite));
 		//Serial.println();
@@ -113,7 +137,7 @@ void loop()
 		//Serial.println();
 		//firstWrite = true;
 		//delay(1000);
-	 //   
+
 		//Serial.println(writeTriple(uriSpaceConst1, subjectConst1, predicateConst1, objectConst1, firstWrite));
 		//Serial.println();
 		//firstWrite = true;

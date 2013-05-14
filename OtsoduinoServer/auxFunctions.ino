@@ -1,6 +1,7 @@
 void searchPath(File dir, char* folder, char* subject, char*predicate, char* object, char* space, boolean deleteTriple) {	
 	
         boolean tripleFound = false;
+        char objType[2];
 
         while(true) {		
 		File entry =  dir.openNextFile();
@@ -25,6 +26,7 @@ void searchPath(File dir, char* folder, char* subject, char*predicate, char* obj
                         memset(subj, '\0', 80);
         	        memset(pred, '\0', 80);
                         memset(obj, '\0', 80);
+                        memset(objType, '\0', 2);
                         strcpy(subj, readTripleTerm(selectedFile));
                         //Serial.println(subj);
                         //Serial.println(strlen(subj));
@@ -33,7 +35,8 @@ void searchPath(File dir, char* folder, char* subject, char*predicate, char* obj
                           break;
                         }  
 			strcpy(pred, readTripleTerm(selectedFile));
-			strcpy(obj, readTripleTerm(selectedFile));
+                        strcpy(objType, readTripleTerm(selectedFile));
+                        strcpy(obj, readTripleTerm(selectedFile));
                         //Serial.println(strlen(subj));
                         //Serial.println(strlen(pred));
                         //Serial.println(strlen(obj));
@@ -47,6 +50,8 @@ void searchPath(File dir, char* folder, char* subject, char*predicate, char* obj
                         strcat(graph, subj);
                         strcat(graph, sepConst);
                         strcat(graph, pred);
+                        strcat(graph, sepConst);
+                        strcat(graph, objType);
                         strcat(graph, sepConst);
                         strcat(graph, obj);
                         strcat(graph, sepConst);
@@ -169,6 +174,8 @@ void createGraph(char* strGraph, EthernetClient client){
 	int index = 0;
 	int position = 0;
 	int aux;
+        int oType;
+        
 	for (int i=0;i<strlen(strGraph);i++){
 		if(strGraph[i]!='|'){
 			rTerm[index++] = strGraph[i];
@@ -176,11 +183,11 @@ void createGraph(char* strGraph, EthernetClient client){
 		else{
 			position++;
 			aux = position;
-			while (aux > 3){
+			while (aux > 4){
 				aux = aux - 3;
 			}
 			switch (aux){
-				case 1:{ //Subject
+				case 1:{ //Subject 
 					client.print('<');
 					client.print(rTerm);
 					client.print('>');
@@ -190,20 +197,49 @@ void createGraph(char* strGraph, EthernetClient client){
 					client.print('<');
 					client.print(rTerm);
 					client.print('>');
+                                        client.print(" ");
 				}break;
-				case 3:{ //Object
-					client.print(" ");
-					if (isUrl(rTerm)){
-						client.print('<');
-						client.print(rTerm);
-						client.print('>');
-						client.print('.');
-					}else{
-						client.print('"');
-						client.print(rTerm);
-						client.print('"');
-						client.println('.');
-					}
+				case 3:{ //Object Type
+                                        oType = atol(rTerm);
+				}break;
+                                case 4:{ //Object
+				    switch (oType){
+                                        case 0:{
+                                            client.print('<');
+					    client.print(rTerm);
+					    client.print('>');
+                                        }break;
+                                        case 1:{
+                                            client.print('"');
+					    client.print(rTerm);
+					    client.print('"');
+                                            client.print("^^<http://www.w3.org/2001/XMLSchema#int>");
+                                        }break;
+                                        case 2:{
+                                            client.print('"');
+					    client.print(rTerm);
+					    client.print('"');
+                                            client.print("^^<http://www.w3.org/2001/XMLSchema#unsignedLong>");
+                                        }break;
+                                        case 3:{
+                                            client.print('"');
+					    client.print(rTerm);
+					    client.print('"');
+                                            client.print("^^<http://www.w3.org/2001/XMLSchema#double>");
+                                        }break;
+                                        case 4:{
+                                            client.print('"');
+					    client.print(rTerm);
+					    client.print('"');
+                                            client.print("^^<http://www.w3.org/2001/XMLSchema#boolean>");
+                                        }break;
+                                        case 5:{
+                                            client.print('"');
+					    client.print(rTerm);
+					    client.print('"');
+                                        }break;
+                                    }    
+				    client.println('.');
 				}break;
 			}
 			memset(rTerm, '\0', 256);

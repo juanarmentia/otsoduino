@@ -1,7 +1,7 @@
 //***********************************************************************************************
 // FUNCION   WRITE(SPACE, SUBJECT, PREDICATE, OBJECT)::Devuelve URI del grafo guardado 
 //***********************************************************************************************
-char* writeTriple(char* space, char* subject, char* predicate, char* object, boolean firstTriple){
+char* writeTriple(char* space, char* subject, char* predicate, char* object,int objType, boolean firstTriple){
   
 	File graphFile;
 	//Serial.print("1. Dentro de writeTriple: ");
@@ -121,7 +121,9 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object, boo
 		graphFile.print('|');
 		graphFile.print(predicate);
 		graphFile.print('|');
-		graphFile.print(object);
+                graphFile.print(objType);
+		graphFile.print('|');
+                graphFile.print(object);
 		graphFile.println('|');
 		graphFile.close();
 	}
