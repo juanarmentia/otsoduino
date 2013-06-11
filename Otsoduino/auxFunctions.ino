@@ -55,9 +55,9 @@ void searchPath(File dir, char* folder, char* subject, char*predicate, char* obj
                         strcat(graph, sepConst);
                         strcat(graph, obj);
                         strcat(graph, sepConst);
-			if (strcmp(subj,subject) == 0){
-				if(strcmp(pred,predicate) == 0){
-					if(strcmp(obj,object) == 0){
+			if ((strcmp(subj,subject) == 0) || (strcmp(anySubj,subject) == 0)){
+				if ((strcmp(pred,predicate) == 0) || (strcmp(anyPred,predicate) == 0)){
+					if ((strcmp(obj,object) == 0) || (strcmp(anyObj,object) == 0)){
                                                 memset(selectedPath, '\0', 64);
 						strcpy(selectedPath, directory);
 						strcat(uriGraph, macIdentifier);
@@ -345,109 +345,4 @@ void separateGraph(char* groupGraph, EthernetClient client){
 }
 
 
-
-
-//void searchPath(File dir, int numTabs, boolean firstFile, char* folder, char* subject, char*predicate, char* object, char* space) {	
-//	
-//        Serial.println("Inicio --------------------- ");
-//        Serial.println(dir);
-//        Serial.println(numTabs);
-//        Serial.println(firstFile);
-//        Serial.println(folder);
-//
-//        while(true) {		
-//		/*if(firstFile){
-//			memset(directory, '\0', 30);
-//			memset(directorySpace, '\0', 30);
-//		}*/
-//		File entry =  dir.openNextFile();
-//		if (!entry) {
-//			//no more files
-//			//Serial.println("**no more files**");
-//			break;
-//		}
-//                Serial.print("Name: ");
-//		Serial.println(entry.name());
-//		if (entry.isDirectory()) {
-//                        Serial.println("Es un directorio");
-//			//Serial.print("Directory name: ");
-//			//Serial.println(entry.name());
-//			/*if(atoi(entry.name()) == atoi(folder)){
-//				strcpy(directory, entry.name());
-//				strcat(directory, "/");
-//				Serial.print("Directory: ");
-//				Serial.println(directory);
-//				strcpy(directorySpace,directory);
-//				selectedDirectory = true;
-//			}
-//			else
-//			{
-//				selectedDirectory = false;
-//			}*/
-//			firstFile = false;
-//			searchPath(entry, numTabs+1, firstFile, folder, subject, predicate, object, space);
-//		} 
-//               /* else if(selectedDirectory) {
-//			        //Serial.println("hola");
-//                        	
-//	                        
-//                                strcpy(directory,directorySpace);
-//				//Serial.println("");
-//				//Serial.print("Abriendo ");
-//				//Serial.print(directory);
-//				//Serial.println(entry.name());
-//				File selectedFile = SD.open(strcat(directory,entry.name()));
-//				//Serial.print("Ruta: ");
-//				//Serial.println(directory);
-//				//Serial.print("Tripleta a buscar: |");
-//				//Serial.print(subject);
-//				//Serial.print("|");
-//				//Serial.print(predicate);
-//				//Serial.print("|");
-//				//Serial.print(object);
-//				//Serial.println("|");
-//				/*memset(graph, '\0', 2000);
-//				while (selectedFile.available()){
-//                                        memset(subj, '\0', 80);
-//        	                        memset(pred, '\0', 80);
-//                                	memset(obj, '\0', 80);
-//					strcpy(subj, readSpaceUri(selectedFile));
-//					strcpy(pred, readSpaceUri(selectedFile));
-//					strcpy(obj, readSpaceUri(selectedFile));
-//					strcat(graph, subj);
-//					strcat(graph, sepConst);
-//					strcat(graph, pred);
-//					strcat(graph, sepConst);
-//					strcat(graph, obj);
-//					strcat(graph, sepConst);
-//					//Serial.print("Tripleta leida: ");
-//					//Serial.print(subj);
-//					//Serial.print("|");
-//					//Serial.print(pred);
-//					//Serial.print("|");
-//					//Serial.print(obj);
-//					//Serial.println("|");
-//					if (strcmp(subj,subject) == 0){
-//						if(strcmp(pred,predicate) == 0){
-//							if(strcmp(obj,object) == 0){
-//                                                                memset(selectedPath, '\0', 64);
-//								strcpy(selectedPath, directory);
-//								strcat(uriGraph, myIP);
-//								//strcat(uriGraph, urlencode(space));
-//								//strcat(uriGraph, "/");
-//								strcat(uriGraph, strtok(directory, "."));
-//								//Serial.print("uriGraph: ");
-//								//Serial.println(uriGraph);
-//								return;//Salir de la función
-//							}
-//						}
-//					}
-//				}
-//
-//				//Serial.println("");
-//		}*/
-//	}
-//	//Serial.print("Fin -------------------- ");
-//	//Serial.println(numTabs);
-//}
 

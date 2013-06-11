@@ -1,3 +1,6 @@
+
+#include <EEPROM.h>
+
 /** 
   write word to EEPROM 
 **/
