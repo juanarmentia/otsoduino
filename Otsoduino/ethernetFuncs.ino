@@ -56,7 +56,7 @@ void httpServer(){
 		if (client.available()) {
 		char c = client.read();
 		//client.print(c);
-		//Serial.print(c);
+		Serial.print(c);
 		// if you've gotten to the end of the line (received a newline
 		// character) and the line is blank, the http request has ended,
 		// so you can send a reply
@@ -162,7 +162,7 @@ void httpServer(){
                         
 			//Read by space
                         if ( (strcmp(identifyGet, "100") == 0) && (strcmp(bufferHttpRequest,"GET") == 0) ){
-				//client.println("100 dentro");
+				Serial.println("100 dentro");
 				memset(urlSpace, '\0', 64);
 				strcpy(urlSpace,urldecode(bufferSpaceVar));
 				if (readGraph(urlSpace) != NULL){
@@ -172,7 +172,8 @@ void httpServer(){
                                         client.println("Content-Type: text/plain; charset=US-ASCII");
                                         client.println("Connection: close");
                                         client.println();
-                                        separateGraph(graph, client);	 
+                                        separateGraph(graph, client);
+                                        Serial.println("Sent");	 
                                 }else{
                                     //ERROR 404
                                         client.println("HTTP/1.1 404 Not Found");

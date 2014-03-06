@@ -148,10 +148,8 @@ char* writeTriple(char* space, char* subject, char* predicate, char* object,int 
 char* readOthersGraph(char* spaceUri){
     char httpGET[128];
     memset(httpGET, '\0', 128);
-    strcat(httpGET, "GET http://");
-    strcat(httpGET, ipBroadcast);
-    strcat(httpGET, "/spaces/");
-    strcat(httpGET, spaceUri);
+    strcat(httpGET, "GET /spaces/");
+    strcat(httpGET, urlencode(spaceUri));
     strcat(httpGET, "/graphs");
     // if you get a connection, report back via serial:
     if (clientOtsopack.connect(broadcastServer, 80)) {
@@ -177,10 +175,8 @@ char* readOthersGraph(char* spaceUri){
 char* readOthersGraph(char* spaceUri, char* graphUri){
     char httpGET[128];
     memset(httpGET, '\0', 128);
-    strcat(httpGET, "GET http://");
-    strcat(httpGET, ipBroadcast);
-    strcat(httpGET, "/spaces/");
-    strcat(httpGET, spaceUri);
+    strcat(httpGET, "GET /spaces/");
+    strcat(httpGET, urlencode(spaceUri));
     strcat(httpGET, "/graphs/");
     strcat(httpGET, graphUri);
     // if you get a connection, report back via serial:
@@ -206,10 +202,8 @@ char* readOthersGraph(char* spaceUri, char* graphUri){
 char* readOthersGraph(char* spaceUri, char* subject, char* predicate, char* object){
     char httpGET[128];
     memset(httpGET, '\0', 128);
-    strcat(httpGET, "GET http://");
-    strcat(httpGET, ipBroadcast);
-    strcat(httpGET, "/spaces/");
-    strcat(httpGET, spaceUri);
+    strcat(httpGET, "GET /spaces/");
+    strcat(httpGET, urlencode(spaceUri));
     strcat(httpGET, "/graphs/wildcards/");
     strcat(httpGET, subject);
     strcat(httpGET, sepUrlConst);
@@ -243,10 +237,8 @@ char* readOthersGraph(char* spaceUri, char* subject, char* predicate, char* obje
 char* deleteOthersGraph(char* spaceUri, char* graphUri){
     char httpGET[128];
     memset(httpGET, '\0', 128);
-    strcat(httpGET, "DELETE http://");
-    strcat(httpGET, ipBroadcast);
-    strcat(httpGET, "/spaces/");
-    strcat(httpGET, spaceUri);
+    strcat(httpGET, "DELETE /spaces/");
+    strcat(httpGET, urlencode(spaceUri));
     strcat(httpGET, "/graphs/");
     strcat(httpGET, graphUri);
     // if you get a connection, report back via serial:
@@ -272,10 +264,8 @@ char* deleteOthersGraph(char* spaceUri, char* graphUri){
 char* deleteOthersGraph(char* spaceUri, char* subject, char* predicate, char* object){
     char httpGET[128];
     memset(httpGET, '\0', 128);
-    strcat(httpGET, "DELETE http://");
-    strcat(httpGET, ipBroadcast);
-    strcat(httpGET, "/spaces/");
-    strcat(httpGET, spaceUri);
+    strcat(httpGET, "DELETE /spaces/");
+    strcat(httpGET, urlencode(spaceUri));
     strcat(httpGET, "/graphs/wildcards/");
     strcat(httpGET, subject);
     strcat(httpGET, sepUrlConst);
